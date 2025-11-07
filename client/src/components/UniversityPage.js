@@ -21,6 +21,7 @@ const UniversityPage = () => {
       return;
     }
     fetchClasses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate]);
 
   useEffect(() => {

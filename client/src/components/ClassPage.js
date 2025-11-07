@@ -23,6 +23,7 @@ const ClassPage = () => {
       return;
     }
     fetchClassData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, navigate]);
 
   useEffect(() => {
