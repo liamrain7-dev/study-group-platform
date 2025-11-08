@@ -23,7 +23,10 @@ const UniversityPage = () => {
       navigate('/login');
       return;
     }
-    fetchClasses();
+    // Make sure user has university before fetching classes
+    if (user && user.university && user.university._id) {
+      fetchClasses();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate]);
 
@@ -65,6 +68,10 @@ const UniversityPage = () => {
   }, [socket, user, searchQuery]);
 
   const fetchClasses = async () => {
+    if (!user || !user.university || !user.university._id) {
+      setLoading(false);
+      return;
+    }
     try {
       const response = await api.get(`/universities/${user.university._id}`);
       const fetchedClasses = response.data.classes || [];
@@ -175,6 +182,12 @@ const UniversityPage = () => {
 
   if (loading) {
     return <div className="loading">Loading...</div>;
+  }
+
+  // If user doesn't have university, redirect to login
+  if (!user || !user.university) {
+    navigate('/login');
+    return <div className="loading">Redirecting...</div>;
   }
 
   return (

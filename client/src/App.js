@@ -16,9 +16,6 @@ const PrivateRoute = ({ children }) => {
     return (
       <div className="loading">
         <div>Loading...</div>
-        <div style={{ fontSize: '0.8rem', marginTop: '10px', opacity: 0.7 }}>
-          If this takes too long, try refreshing
-        </div>
       </div>
     );
   }

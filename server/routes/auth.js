@@ -113,6 +113,8 @@ router.post('/login', async (req, res) => {
 // Get current user
 router.get('/me', require('../middleware/auth'), async (req, res) => {
   try {
+    // Ensure university is populated
+    await req.user.populate('university');
     res.json({
       user: {
         id: req.user._id,
