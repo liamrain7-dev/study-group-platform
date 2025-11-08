@@ -240,8 +240,8 @@ const MyGroups = () => {
   return (
     <div className="my-groups-page">
       <header className="my-groups-header">
-        <button onClick={() => navigate('/university')} className="btn-back">
-          ← Home
+        <button onClick={() => navigate(-1)} className="btn-back">
+          ← Back
         </button>
         <h1>My Groups</h1>
       </header>
