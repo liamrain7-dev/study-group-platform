@@ -213,7 +213,6 @@ const UniversityPage = () => {
   const university = user.university;
   const universityName = typeof university === 'object' && university ? (university.name || 'University') : 'University';
   const universityId = typeof university === 'object' && university ? (university._id || university.id) : university;
-  const userId = user._id || user.id;
   
   // Debug logging (can be removed in production)
   if (!university || !universityId) {
