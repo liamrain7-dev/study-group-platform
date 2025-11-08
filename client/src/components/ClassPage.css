@@ -171,8 +171,21 @@
   transition: background 0.3s;
 }
 
-.btn-leave-group:hover {
-  background: #cc0000;
+.btn-disband-group {
+  width: 100%;
+  padding: 12px;
+  background: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-disband-group:hover {
+  background: #e55a2b;
 }
 
 .btn-disabled {

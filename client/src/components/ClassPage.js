@@ -113,6 +113,20 @@ const ClassPage = () => {
     }
   };
 
+  const handleDisbandGroup = async (groupId) => {
+    if (!window.confirm('Are you sure you want to disband this study group? This will remove all members and delete the group permanently.')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/study-groups/${groupId}`);
+      // Group will be removed via socket event
+      setStudyGroups((prev) => prev.filter(g => g._id !== groupId));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to disband study group');
+    }
+  };
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
@@ -193,16 +207,19 @@ const ClassPage = () => {
             </div>
           ) : (
             studyGroups.map((group) => {
-              // Check if user is creator or member
-              const isCreator = group.createdBy?._id === user._id || 
-                               group.createdBy?.toString() === user._id?.toString();
+              // Check if user is creator
+              const creatorId = group.createdBy?._id || group.createdBy;
+              const userId = user._id;
+              const isCreator = creatorId?.toString() === userId?.toString();
+              
+              // Check if user is a member (handle both ObjectId and populated objects)
               const isMember = group.members?.some(
                 (member) => {
                   const memberId = member._id || member;
-                  const userId = user._id;
                   return memberId?.toString() === userId?.toString();
                 }
-              ) || isCreator;
+              );
+              
               const isFull = group.members?.length >= group.maxMembers;
 
               return (
@@ -227,16 +244,23 @@ const ClassPage = () => {
                       ))}
                     </div>
                   </div>
-                  {!isMember && (
-                    <button
-                      onClick={() => handleJoinGroup(group._id)}
-                      disabled={isFull}
-                      className={isFull ? 'btn-disabled' : 'btn-primary'}
-                    >
-                      {isFull ? 'Group Full' : 'Join Group'}
-                    </button>
+                  {isCreator && (
+                    <div className="group-member-actions">
+                      <button
+                        className="btn-in-group"
+                        disabled
+                      >
+                        In Group (Creator)
+                      </button>
+                      <button
+                        onClick={() => handleDisbandGroup(group._id)}
+                        className="btn-disband-group"
+                      >
+                        Disband Group
+                      </button>
+                    </div>
                   )}
-                  {isMember && (
+                  {!isCreator && isMember && (
                     <div className="group-member-actions">
                       <button
                         className="btn-in-group"
@@ -251,6 +275,15 @@ const ClassPage = () => {
                         Leave Group
                       </button>
                     </div>
+                  )}
+                  {!isCreator && !isMember && (
+                    <button
+                      onClick={() => handleJoinGroup(group._id)}
+                      disabled={isFull}
+                      className={isFull ? 'btn-disabled' : 'btn-primary'}
+                    >
+                      {isFull ? 'Group Full' : 'Join Group'}
+                    </button>
                   )}
                 </div>
               );
