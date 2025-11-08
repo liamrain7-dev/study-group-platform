@@ -98,8 +98,8 @@ const ClassPage = () => {
   return (
     <div className="class-page">
       <header className="class-header">
-        <button onClick={() => navigate('/university')} className="btn-back">
-          ← Home
+        <button onClick={() => navigate(-1)} className="btn-back">
+          ← Back
         </button>
         <div>
           <h1>{classData.name}</h1>
