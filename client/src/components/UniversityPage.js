@@ -17,7 +17,6 @@ const UniversityPage = () => {
   const [error, setError] = useState('');
   const [usersInUniversity, setUsersInUniversity] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
-  const [showSearchResults, setShowSearchResults] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -81,7 +80,6 @@ const UniversityPage = () => {
   useEffect(() => {
     if (searchQuery.trim() === '') {
       setClasses(allClasses);
-      setShowSearchResults(false);
       return;
     }
 
@@ -94,7 +92,6 @@ const UniversityPage = () => {
     });
 
     setClasses(filtered);
-    setShowSearchResults(true);
   }, [searchQuery, allClasses]);
 
   const handleSearchChange = (e) => {
@@ -210,7 +207,7 @@ const UniversityPage = () => {
             type="text"
             value={searchQuery}
             onChange={handleSearchChange}
-            onFocus={() => setShowSearchResults(true)}
+            onFocus={() => {}}
             placeholder="Search for a class by topic or class level..."
             className="class-search-input"
           />
@@ -218,7 +215,6 @@ const UniversityPage = () => {
             <button
               onClick={() => {
                 setSearchQuery('');
-                setShowSearchResults(false);
               }}
               className="clear-search-btn"
               title="Clear search"
