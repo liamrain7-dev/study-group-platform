@@ -18,45 +18,25 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     
-    // Fallback timeout - if loading takes too long, redirect to homepage
-    let fallbackTimeout = setTimeout(() => {
-      console.warn('Auth loading timeout - redirecting to homepage');
-      localStorage.removeItem('token');
-      setUser(null);
-      setLoading(false);
-      // Redirect to homepage
-      window.location.href = '/university';
-    }, 3000); // 3 second timeout, then redirect to homepage
-    
     const fetchUser = async () => {
       try {
         const response = await api.get('/auth/me');
-        clearTimeout(fallbackTimeout); // Clear timeout on success
         setUser(response.data.user);
         setLoading(false);
       } catch (error) {
-        // If API fails, clear token and redirect to homepage
+        // If API fails, clear token
         console.error('Failed to fetch user:', error);
-        clearTimeout(fallbackTimeout); // Clear timeout on error
         localStorage.removeItem('token');
         setUser(null);
         setLoading(false);
-        // Redirect to homepage on error (unless already on public pages)
-        const currentPath = window.location.pathname;
-        if (currentPath !== '/university' && currentPath !== '/login' && currentPath !== '/register' && currentPath !== '/') {
-          window.location.href = '/university';
-        }
       }
     };
     
     if (token) {
       fetchUser();
     } else {
-      clearTimeout(fallbackTimeout);
       setLoading(false);
     }
-    
-    return () => clearTimeout(fallbackTimeout);
   }, []);
 
   const login = async (email, password) => {
