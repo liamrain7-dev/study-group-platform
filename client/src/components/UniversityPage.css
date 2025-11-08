@@ -15,6 +15,11 @@
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .university-header h1 {
   color: #667eea;
   font-size: 2.5rem;
@@ -63,7 +68,71 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 20px;
+}
+
+.class-search-container {
+  position: relative;
   margin-bottom: 30px;
+  max-width: 600px;
+}
+
+.class-search-input {
+  width: 100%;
+  padding: 14px 45px 14px 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  font-size: 1rem;
+  transition: border-color 0.3s, box-shadow 0.3s;
+  background: white;
+}
+
+.class-search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.clear-search-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: #ccc;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.clear-search-btn:hover {
+  background: #999;
+}
+
+.search-no-results {
+  padding: 40px;
+}
+
+.search-no-results p {
+  margin-bottom: 15px;
+}
+
+.suggestion-text {
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 20px !important;
+}
+
+.search-no-results .btn-primary {
+  width: auto;
+  padding: 10px 24px;
 }
 
 .classes-header h2 {
@@ -82,6 +151,14 @@
 .create-class-form h3 {
   color: #667eea;
   margin-bottom: 20px;
+}
+
+.form-hint {
+  display: block;
+  color: #666;
+  font-size: 0.85rem;
+  margin-top: 5px;
+  font-style: italic;
 }
 
 .classes-grid {
@@ -128,17 +205,36 @@
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
 }
 
-.class-card h3 {
+.class-card mark {
+  background-color: #fff3cd;
   color: #333;
-  font-size: 1.5rem;
+  font-weight: 600;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.class-card h3 {
+  color: #667eea;
+  font-size: 1.3rem;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.class-topic-level {
+  color: #666;
+  font-size: 0.95rem;
+  margin-top: 5px;
   margin-bottom: 10px;
+  font-weight: 500;
 }
 
 .class-code {
-  color: #667eea;
-  font-weight: 600;
-  font-size: 1.1rem;
-  margin-bottom: 10px;
+  color: #999;
+  font-weight: 500;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .class-description {
