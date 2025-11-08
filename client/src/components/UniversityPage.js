@@ -75,14 +75,8 @@ const UniversityPage = () => {
         });
       });
 
-      socket.on('class-deleted', (classId) => {
-        setAllClasses((prev) => prev.filter(c => c._id !== classId));
-        setClasses((prev) => prev.filter(c => c._id !== classId));
-      });
-
       return () => {
         socket.off('new-class');
-        socket.off('class-deleted');
       };
     }
   }, [socket, user, searchQuery]);
@@ -169,10 +163,12 @@ const UniversityPage = () => {
     setError('');
 
     try {
+      // Auto-capitalize the course name
+      const capitalizedCode = newClass.code.toUpperCase().trim();
       // Use course name for both name and code fields
       const classData = {
-        name: newClass.code,
-        code: newClass.code,
+        name: capitalizedCode,
+        code: capitalizedCode,
         description: newClass.description
       };
       const response = await api.post('/classes', classData);
@@ -194,21 +190,6 @@ const UniversityPage = () => {
       setShowCreateClass(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create class');
-    }
-  };
-
-  const handleDeleteClass = async (classId, e) => {
-    e.stopPropagation(); // Prevent navigation when clicking delete
-    
-    if (!window.confirm('Are you sure you want to delete this class? This will also delete all study groups in it.')) {
-      return;
-    }
-
-    try {
-      await api.delete(`/classes/${classId}`);
-      setClasses(classes.filter(c => c._id !== classId));
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete class');
     }
   };
 
@@ -317,7 +298,11 @@ const UniversityPage = () => {
                 <input
                   type="text"
                   value={newClass.code}
-                  onChange={(e) => setNewClass({ ...newClass, code: e.target.value })}
+                  onChange={(e) => {
+                    // Auto-capitalize as user types
+                    const value = e.target.value.toUpperCase();
+                    setNewClass({ ...newClass, code: value });
+                  }}
                   required
                   placeholder="e.g., CS135"
                 />
@@ -347,9 +332,9 @@ const UniversityPage = () => {
               <button
                 onClick={() => {
                   setShowCreateClass(true);
-                  // Use search query as course name
+                  // Use search query as course name (auto-capitalized)
                   setNewClass({ 
-                    code: searchQuery, 
+                    code: searchQuery.toUpperCase().trim(), 
                     description: '' 
                   });
                   setSearchQuery('');
@@ -370,15 +355,6 @@ const UniversityPage = () => {
                 className="class-card"
                 onClick={() => navigate(`/class/${classItem._id}`)}
               >
-                {(classItem.createdBy?._id === userId || classItem.createdBy?.id === userId) && (
-                  <button
-                    className="delete-class-btn"
-                    onClick={(e) => handleDeleteClass(classItem._id, e)}
-                    title="Delete class"
-                  >
-                    ×
-                  </button>
-                )}
                 <h3>
                   {searchQuery ? highlightMatch(classItem.name, searchQuery) : classItem.name}
                 </h3>
@@ -390,7 +366,6 @@ const UniversityPage = () => {
                 )}
                 <div className="class-meta">
                   <span>{classItem.studyGroups?.length || 0} Study Groups</span>
-                  <span>Created by {classItem.createdBy?.name}</span>
                 </div>
               </div>
             ))
