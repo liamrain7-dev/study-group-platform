@@ -18,11 +18,27 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     
-    // Fallback timeout - if loading takes too long, stop loading
-    const fallbackTimeout = setTimeout(() => {
-      console.warn('Auth loading timeout - continuing anyway');
-      setLoading(false);
-    }, 15000); // 15 second max
+    // Fallback timeout - if loading takes too long, reload the page
+    let fallbackTimeout = setTimeout(() => {
+      console.warn('Auth loading timeout - reloading page');
+      window.location.reload();
+    }, 5000); // 5 second timeout, then reload
+    
+    const fetchUser = async () => {
+      try {
+        const response = await api.get('/auth/me');
+        clearTimeout(fallbackTimeout); // Clear timeout on success
+        setUser(response.data.user);
+        setLoading(false);
+      } catch (error) {
+        // If API fails, clear token and continue
+        console.error('Failed to fetch user:', error);
+        clearTimeout(fallbackTimeout); // Clear timeout on error
+        localStorage.removeItem('token');
+        setUser(null);
+        setLoading(false);
+      }
+    };
     
     if (token) {
       fetchUser();
@@ -33,20 +49,6 @@ export const AuthProvider = ({ children }) => {
     
     return () => clearTimeout(fallbackTimeout);
   }, []);
-
-  const fetchUser = async () => {
-    try {
-      const response = await api.get('/auth/me');
-      setUser(response.data.user);
-    } catch (error) {
-      // If API fails, clear token and continue
-      console.error('Failed to fetch user:', error);
-      localStorage.removeItem('token');
-      setUser(null);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const login = async (email, password) => {
     const response = await api.post('/auth/login', { email, password });
