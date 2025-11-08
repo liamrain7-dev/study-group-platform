@@ -1,5 +1,7 @@
 # Study Group Platform
 
+> ✅ **Repository Access Verified** - Repository is accessible and ready for development!
+
 A live server platform for university students to create and join study groups. Students can login, select their university, browse classes, and create or join study groups in real-time.
 
 ## Features
