@@ -97,10 +97,10 @@ const ClassPage = () => {
 
   return (
     <div className="class-page">
+      <button onClick={() => navigate(-1)} className="btn-back">
+        ← Back
+      </button>
       <header className="class-header">
-        <button onClick={() => navigate(-1)} className="btn-back">
-          ← Back
-        </button>
         <div>
           <h1>{classData.name}</h1>
           <p className="class-code">{classData.code}</p>
