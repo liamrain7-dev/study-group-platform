@@ -17,22 +17,44 @@ const UniversityPage = () => {
   const [error, setError] = useState('');
   const [usersInUniversity, setUsersInUniversity] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
     if (!user) {
       navigate('/login');
       return;
     }
+    
+    // Safety timeout - always stop loading after 5 seconds
+    const safetyTimeout = setTimeout(() => {
+      console.warn('Loading timeout - forcing render');
+      setLoading(false);
+    }, 5000);
+    
     // Make sure user has university before fetching classes
-    if (user && user.university && user.university._id) {
+    // Handle both user.id (from API) and user._id (if present)
+    const userId = user._id || user.id;
+    const universityId = user.university?._id || user.university;
+    
+    if (user && user.university && universityId) {
       fetchClasses();
+    } else {
+      console.error('User or university missing:', { user, university: user?.university });
+      setLoading(false);
+      setFetchError('University information not found');
+      clearTimeout(safetyTimeout);
     }
+    
+    return () => clearTimeout(safetyTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate]);
 
   useEffect(() => {
-    if (socket && user?.university?._id) {
-      socket.emit('join-university', user.university._id);
+    if (socket && user?.university) {
+      const universityId = user.university._id || user.university;
+      if (universityId) {
+        socket.emit('join-university', universityId);
+      }
 
       socket.on('new-class', (classData) => {
         setAllClasses((prev) => {
@@ -68,17 +90,29 @@ const UniversityPage = () => {
   }, [socket, user, searchQuery]);
 
   const fetchClasses = async () => {
-    if (!user || !user.university || !user.university._id) {
+    if (!user || !user.university) {
       setLoading(false);
       return;
     }
+    
+    // Handle both _id and direct ID reference
+    const universityId = user.university._id || user.university;
+    
+    if (!universityId) {
+      console.error('University ID not found');
+      setLoading(false);
+      return;
+    }
+    
     try {
-      const response = await api.get(`/universities/${user.university._id}`);
+      setFetchError(null);
+      const response = await api.get(`/universities/${universityId}`);
       const fetchedClasses = response.data.classes || [];
       setAllClasses(fetchedClasses);
       setClasses(fetchedClasses);
     } catch (error) {
       console.error('Error fetching classes:', error);
+      setFetchError(error.response?.data?.message || 'Failed to load classes. Please refresh the page.');
     } finally {
       setLoading(false);
     }
@@ -180,21 +214,38 @@ const UniversityPage = () => {
     }
   };
 
+  // Redirect effect if user or university is missing
+  useEffect(() => {
+    if (!loading && (!user || !user.university)) {
+      navigate('/login');
+    }
+  }, [loading, user, navigate]);
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
 
-  // If user doesn't have university, redirect to login
+  // If user doesn't have university, show loading while redirecting
   if (!user || !user.university) {
-    navigate('/login');
     return <div className="loading">Redirecting...</div>;
+  }
+
+  // Get university data - handle both populated object and ID
+  const university = user.university;
+  const universityName = typeof university === 'object' && university ? (university.name || 'University') : 'University';
+  const universityId = typeof university === 'object' && university ? (university._id || university.id) : university;
+  const userId = user._id || user.id;
+  
+  // Debug logging (can be removed in production)
+  if (!university || !universityId) {
+    console.warn('University data issue:', { university, universityId, user });
   }
 
   return (
     <div className="university-page">
       <header className="university-header">
         <div>
-          <h1>{user?.university?.name}</h1>
+          <h1>{universityName}</h1>
           <p>Welcome, {user?.name}!</p>
           <div className="stats-info">
             <span>{usersInUniversity} {usersInUniversity === 1 ? 'student' : 'students'} at your university</span>
@@ -211,6 +262,21 @@ const UniversityPage = () => {
       </header>
 
       <div className="university-content">
+        {fetchError && (
+          <div className="error-message" style={{ marginBottom: '20px' }}>
+            {fetchError}
+            <button 
+              onClick={() => {
+                setFetchError(null);
+                setLoading(true);
+                fetchClasses();
+              }}
+              style={{ marginLeft: '10px', padding: '5px 10px' }}
+            >
+              Retry
+            </button>
+          </div>
+        )}
         <div className="classes-header">
           <h2>Classes</h2>
           <button
@@ -306,7 +372,7 @@ const UniversityPage = () => {
                 className="class-card"
                 onClick={() => navigate(`/class/${classItem._id}`)}
               >
-                {classItem.createdBy?._id === user._id && (
+                {(classItem.createdBy?._id === userId || classItem.createdBy?.id === userId) && (
                   <button
                     className="delete-class-btn"
                     onClick={(e) => handleDeleteClass(classItem._id, e)}
