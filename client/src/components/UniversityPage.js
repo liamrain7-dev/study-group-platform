@@ -13,7 +13,7 @@ const UniversityPage = () => {
   const [allClasses, setAllClasses] = useState([]); // Store all classes for search
   const [loading, setLoading] = useState(true);
   const [showCreateClass, setShowCreateClass] = useState(false);
-  const [newClass, setNewClass] = useState({ name: '', code: '', description: '' });
+  const [newClass, setNewClass] = useState({ code: '', description: '' });
   const [error, setError] = useState('');
   const [usersInUniversity, setUsersInUniversity] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
@@ -130,7 +130,13 @@ const UniversityPage = () => {
     setError('');
 
     try {
-      const response = await api.post('/classes', newClass);
+      // Use course name for both name and code fields
+      const classData = {
+        name: newClass.code,
+        code: newClass.code,
+        description: newClass.description
+      };
+      const response = await api.post('/classes', classData);
       setAllClasses([response.data, ...allClasses]);
       // Update displayed classes based on search
       if (searchQuery.trim() === '') {
@@ -145,7 +151,7 @@ const UniversityPage = () => {
           setClasses([response.data, ...classes]);
         }
       }
-      setNewClass({ name: '', code: '', description: '' });
+      setNewClass({ code: '', description: '' });
       setShowCreateClass(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create class');
@@ -208,7 +214,7 @@ const UniversityPage = () => {
             value={searchQuery}
             onChange={handleSearchChange}
             onFocus={() => {}}
-            placeholder="Search for a class by topic or class level..."
+            placeholder="Search for a class by course name..."
             className="class-search-input"
           />
           {searchQuery && (
@@ -230,18 +236,7 @@ const UniversityPage = () => {
             {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleCreateClass}>
               <div className="form-group">
-                <label>Topic</label>
-                <input
-                  type="text"
-                  value={newClass.name}
-                  onChange={(e) => setNewClass({ ...newClass, name: e.target.value })}
-                  required
-                  placeholder="e.g., Computer Science"
-                />
-                <small className="form-hint">The general subject or topic (e.g., Computer Science, Mathematics, Biology)</small>
-              </div>
-              <div className="form-group">
-                <label>Class Level</label>
+                <label>Course Name</label>
                 <input
                   type="text"
                   value={newClass.code}
@@ -249,7 +244,7 @@ const UniversityPage = () => {
                   required
                   placeholder="e.g., CS135"
                 />
-                <small className="form-hint">The specific class code or level (e.g., CS135, MATH101, BIO200)</small>
+                <small className="form-hint">The course name or code (e.g., CS135, MATH101, BIO200)</small>
               </div>
               <div className="form-group">
                 <label>Description (Optional)</label>
@@ -275,23 +270,11 @@ const UniversityPage = () => {
               <button
                 onClick={() => {
                   setShowCreateClass(true);
-                  // Try to extract topic and code from search query
-                  // If it looks like "CS135" or similar, use it as code
-                  const upperQuery = searchQuery.toUpperCase().trim();
-                  const codeMatch = upperQuery.match(/^[A-Z]{2,4}\d{1,4}$/);
-                  if (codeMatch) {
-                    setNewClass({ 
-                      name: '', 
-                      code: upperQuery, 
-                      description: '' 
-                    });
-                  } else {
-                    setNewClass({ 
-                      name: searchQuery, 
-                      code: '', 
-                      description: '' 
-                    });
-                  }
+                  // Use search query as course name
+                  setNewClass({ 
+                    code: searchQuery, 
+                    description: '' 
+                  });
                   setSearchQuery('');
                 }}
                 className="btn-primary"
