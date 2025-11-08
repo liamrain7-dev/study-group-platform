@@ -215,17 +215,17 @@ const ClassPage = () => {
               const creatorIdStr = creatorId ? (creatorId.toString?.() || String(creatorId)) : '';
               const userIdStr = userId ? (userId.toString?.() || String(userId)) : '';
               
-              const isCreator = creatorIdStr && userIdStr && creatorIdStr === userIdStr;
+              const isCreator = creatorIdStr && userIdStr && (creatorIdStr === userIdStr);
               
               // Check if user is a member - handle both ObjectId and populated objects
-              const isMember = userIdStr && group.members?.some(
+              const isMember = (userIdStr && group.members?.some(
                 (member) => {
                   if (!member) return false;
                   const memberId = member._id || member;
                   const memberIdStr = memberId ? (memberId.toString?.() || String(memberId)) : '';
                   return memberIdStr === userIdStr;
                 }
-              ) || false;
+              )) || false;
               
               const isFull = group.members?.length >= group.maxMembers;
 
