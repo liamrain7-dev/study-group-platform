@@ -6,6 +6,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import UniversityPage from './components/UniversityPage';
 import ClassPage from './components/ClassPage';
+import MyGroups from './components/MyGroups';
 import './App.css';
 
 const PrivateRoute = ({ children }) => {
@@ -47,6 +48,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <ClassPage />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/my-groups"
+                element={
+                  <PrivateRoute>
+                    <MyGroups />
                   </PrivateRoute>
                 }
               />

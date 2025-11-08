@@ -10,11 +10,13 @@ const UniversityPage = () => {
   const socket = useSocket();
   const navigate = useNavigate();
   const [classes, setClasses] = useState([]);
+  const [allClasses, setAllClasses] = useState([]); // Store all classes for search
   const [loading, setLoading] = useState(true);
   const [showCreateClass, setShowCreateClass] = useState(false);
   const [newClass, setNewClass] = useState({ name: '', code: '', description: '' });
   const [error, setError] = useState('');
   const [usersInUniversity, setUsersInUniversity] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -30,10 +32,28 @@ const UniversityPage = () => {
       socket.emit('join-university', user.university._id);
 
       socket.on('new-class', (classData) => {
-        setClasses((prev) => [classData, ...prev]);
+        setAllClasses((prev) => {
+          const updated = [classData, ...prev];
+          // Update filtered classes based on current search
+          setClasses((currentFiltered) => {
+            const query = searchQuery.toLowerCase();
+            if (query.trim() === '') {
+              return updated;
+            }
+            const matches = classData.name.toLowerCase().includes(query) ||
+                           classData.code.toLowerCase().includes(query) ||
+                           classData.description?.toLowerCase().includes(query);
+            if (matches) {
+              return [classData, ...currentFiltered];
+            }
+            return currentFiltered;
+          });
+          return updated;
+        });
       });
 
       socket.on('class-deleted', (classId) => {
+        setAllClasses((prev) => prev.filter(c => c._id !== classId));
         setClasses((prev) => prev.filter(c => c._id !== classId));
       });
 
@@ -42,17 +62,52 @@ const UniversityPage = () => {
         socket.off('class-deleted');
       };
     }
-  }, [socket, user]);
+  }, [socket, user, searchQuery]);
 
   const fetchClasses = async () => {
     try {
       const response = await api.get(`/universities/${user.university._id}`);
-      setClasses(response.data.classes || []);
+      const fetchedClasses = response.data.classes || [];
+      setAllClasses(fetchedClasses);
+      setClasses(fetchedClasses);
     } catch (error) {
       console.error('Error fetching classes:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setClasses(allClasses);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase();
+    const filtered = allClasses.filter(classItem => {
+      const nameMatch = classItem.name.toLowerCase().includes(query);
+      const codeMatch = classItem.code.toLowerCase().includes(query);
+      const descMatch = classItem.description?.toLowerCase().includes(query);
+      return nameMatch || codeMatch || descMatch;
+    });
+
+    setClasses(filtered);
+  }, [searchQuery, allClasses]);
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  const highlightMatch = (text, query) => {
+    if (!query || !text) return text;
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return parts.map((part, i) =>
+      part.toLowerCase() === query.toLowerCase() ? (
+        <mark key={i}>{part}</mark>
+      ) : (
+        part
+      )
+    );
   };
 
   const fetchStats = async () => {
@@ -76,7 +131,20 @@ const UniversityPage = () => {
 
     try {
       const response = await api.post('/classes', newClass);
-      setClasses([response.data, ...classes]);
+      setAllClasses([response.data, ...allClasses]);
+      // Update displayed classes based on search
+      if (searchQuery.trim() === '') {
+        setClasses([response.data, ...classes]);
+      } else {
+        // Re-run search filter
+        const query = searchQuery.toLowerCase();
+        const matches = response.data.name.toLowerCase().includes(query) ||
+                       response.data.code.toLowerCase().includes(query) ||
+                       response.data.description?.toLowerCase().includes(query);
+        if (matches) {
+          setClasses([response.data, ...classes]);
+        }
+      }
       setNewClass({ name: '', code: '', description: '' });
       setShowCreateClass(false);
     } catch (err) {
@@ -113,9 +181,14 @@ const UniversityPage = () => {
             <span>{usersInUniversity} {usersInUniversity === 1 ? 'student' : 'students'} at your university</span>
           </div>
         </div>
-        <button onClick={logout} className="btn-secondary">
-          Logout
-        </button>
+        <div className="header-actions">
+          <button onClick={() => navigate('/my-groups')} className="btn-secondary">
+            My Groups
+          </button>
+          <button onClick={logout} className="btn-secondary">
+            Logout
+          </button>
+        </div>
       </header>
 
       <div className="university-content">
@@ -129,30 +202,54 @@ const UniversityPage = () => {
           </button>
         </div>
 
+        <div className="class-search-container">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            onFocus={() => {}}
+            placeholder="Search for a class by topic or class level..."
+            className="class-search-input"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery('');
+              }}
+              className="clear-search-btn"
+              title="Clear search"
+            >
+              ×
+            </button>
+          )}
+        </div>
+
         {showCreateClass && (
           <div className="create-class-form">
             <h3>Create New Class</h3>
             {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleCreateClass}>
               <div className="form-group">
-                <label>Class Name</label>
+                <label>Topic</label>
                 <input
                   type="text"
                   value={newClass.name}
                   onChange={(e) => setNewClass({ ...newClass, name: e.target.value })}
                   required
-                  placeholder="e.g., Introduction to Computer Science"
+                  placeholder="e.g., Computer Science"
                 />
+                <small className="form-hint">The general subject or topic (e.g., Computer Science, Mathematics, Biology)</small>
               </div>
               <div className="form-group">
-                <label>Class Code</label>
+                <label>Class Level</label>
                 <input
                   type="text"
                   value={newClass.code}
                   onChange={(e) => setNewClass({ ...newClass, code: e.target.value })}
                   required
-                  placeholder="e.g., CS101"
+                  placeholder="e.g., CS135"
                 />
+                <small className="form-hint">The specific class code or level (e.g., CS135, MATH101, BIO200)</small>
               </div>
               <div className="form-group">
                 <label>Description (Optional)</label>
@@ -171,7 +268,38 @@ const UniversityPage = () => {
         )}
 
         <div className="classes-grid">
-          {classes.length === 0 ? (
+          {classes.length === 0 && searchQuery ? (
+            <div className="empty-state search-no-results">
+              <p>No classes found matching "<strong>{searchQuery}</strong>"</p>
+              <p className="suggestion-text">Would you like to create this class?</p>
+              <button
+                onClick={() => {
+                  setShowCreateClass(true);
+                  // Try to extract topic and code from search query
+                  // If it looks like "CS135" or similar, use it as code
+                  const upperQuery = searchQuery.toUpperCase().trim();
+                  const codeMatch = upperQuery.match(/^[A-Z]{2,4}\d{1,4}$/);
+                  if (codeMatch) {
+                    setNewClass({ 
+                      name: '', 
+                      code: upperQuery, 
+                      description: '' 
+                    });
+                  } else {
+                    setNewClass({ 
+                      name: searchQuery, 
+                      code: '', 
+                      description: '' 
+                    });
+                  }
+                  setSearchQuery('');
+                }}
+                className="btn-primary"
+              >
+                Create Class
+              </button>
+            </div>
+          ) : classes.length === 0 ? (
             <div className="empty-state">
               <p>No classes yet. Create one to get started!</p>
             </div>
@@ -191,8 +319,12 @@ const UniversityPage = () => {
                     ×
                   </button>
                 )}
-                <h3>{classItem.name}</h3>
-                <p className="class-code">{classItem.code}</p>
+                <h3>
+                  {searchQuery ? highlightMatch(classItem.name, searchQuery) : classItem.name}
+                </h3>
+                <p className="class-code">
+                  {searchQuery ? highlightMatch(classItem.code, searchQuery) : classItem.code}
+                </p>
                 {classItem.description && (
                   <p className="class-description">{classItem.description}</p>
                 )}
