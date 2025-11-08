@@ -24,6 +24,18 @@
 .university-header p {
   color: #666;
   font-size: 1.1rem;
+  margin-bottom: 5px;
+}
+
+.stats-info {
+  color: #888;
+  font-size: 0.9rem;
+  margin-top: 5px;
+}
+
+.total-users {
+  color: #aaa;
+  font-size: 0.85rem;
 }
 
 .btn-secondary {

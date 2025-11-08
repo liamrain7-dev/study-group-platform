@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 import './Auth.css';
 
 const Login = () => {
@@ -8,8 +9,22 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [totalUsers, setTotalUsers] = useState(0);
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchTotalUsers();
+  }, []);
+
+  const fetchTotalUsers = async () => {
+    try {
+      const response = await api.get('/auth/stats/total');
+      setTotalUsers(response.data.totalUsers);
+    } catch (error) {
+      // Silently fail - don't show error for stats
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,6 +46,11 @@ const Login = () => {
       <div className="auth-card">
         <h1>Study Groups</h1>
         <h2>Login</h2>
+        {totalUsers > 0 && (
+          <p className="user-count-banner">
+            {totalUsers} {totalUsers === 1 ? 'student' : 'students'} already using Study Groups!
+          </p>
+        )}
         {error && <div className="error-message">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">

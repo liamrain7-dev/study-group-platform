@@ -14,6 +14,7 @@ const UniversityPage = () => {
   const [showCreateClass, setShowCreateClass] = useState(false);
   const [newClass, setNewClass] = useState({ name: '', code: '', description: '' });
   const [error, setError] = useState('');
+  const [usersInUniversity, setUsersInUniversity] = useState(0);
 
   useEffect(() => {
     if (!user) {
@@ -54,6 +55,21 @@ const UniversityPage = () => {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const response = await api.get('/auth/stats');
+      setUsersInUniversity(response.data.usersInYourUniversity);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchStats();
+    }
+  }, [user]);
+
   const handleCreateClass = async (e) => {
     e.preventDefault();
     setError('');
@@ -93,6 +109,9 @@ const UniversityPage = () => {
         <div>
           <h1>{user?.university?.name}</h1>
           <p>Welcome, {user?.name}!</p>
+          <div className="stats-info">
+            <span>{usersInUniversity} {usersInUniversity === 1 ? 'student' : 'students'} at your university</span>
+          </div>
         </div>
         <button onClick={logout} className="btn-secondary">
           Logout

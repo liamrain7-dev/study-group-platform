@@ -19,12 +19,23 @@ const Register = () => {
   const [loadingUniversities, setLoadingUniversities] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [totalUsers, setTotalUsers] = useState(0);
   const { register } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchUniversities();
+    fetchTotalUsers();
   }, []);
+
+  const fetchTotalUsers = async () => {
+    try {
+      const response = await api.get('/auth/stats/total');
+      setTotalUsers(response.data.totalUsers);
+    } catch (error) {
+      // Silently fail - don't show error for stats
+    }
+  };
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -133,6 +144,11 @@ const Register = () => {
       <div className="auth-card">
         <h1>Study Groups</h1>
         <h2>Create Account</h2>
+        {totalUsers > 0 && (
+          <p className="user-count-banner">
+            Join {totalUsers} {totalUsers === 1 ? 'student' : 'students'} already using Study Groups!
+          </p>
+        )}
         {error && <div className="error-message">{error}</div>}
         <form onSubmit={handleSubmit}>
           <div className="form-group">

@@ -126,5 +126,30 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
   }
 });
 
+// Get total user count (public, no auth required)
+router.get('/stats/total', async (req, res) => {
+  try {
+    const totalUsers = await User.countDocuments();
+    res.json({ totalUsers });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get user statistics for logged-in users
+router.get('/stats', require('../middleware/auth'), async (req, res) => {
+  try {
+    const usersInUniversity = await User.countDocuments({ 
+      university: req.user.university._id || req.user.university 
+    });
+    
+    res.json({
+      usersInYourUniversity: usersInUniversity
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;
 
