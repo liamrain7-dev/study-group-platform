@@ -13,20 +13,22 @@
 }
 
 .btn-back {
-  padding: 8px 16px;
-  background: #f0f0f0;
-  color: #333;
-  border: none;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 8px;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
   margin-bottom: 20px;
-  transition: background 0.3s;
+  transition: all 0.3s;
+  display: inline-block;
 }
 
 .btn-back:hover {
-  background: #e0e0e0;
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.5);
 }
 
 .class-header h1 {
