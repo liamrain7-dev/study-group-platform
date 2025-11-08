@@ -12,12 +12,23 @@ import './App.css';
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
 
+  // If loading takes too long, redirect to homepage
+  React.useEffect(() => {
+    if (loading) {
+      const timeout = setTimeout(() => {
+        // Redirect to homepage if loading takes more than 4 seconds
+        window.location.href = '/university';
+      }, 4000);
+      return () => clearTimeout(timeout);
+    }
+  }, [loading]);
+
   if (loading) {
     return (
       <div className="loading">
         <div>Loading...</div>
         <div style={{ fontSize: '0.8rem', marginTop: '10px', opacity: 0.7 }}>
-          If this takes too long, try refreshing
+          Redirecting to homepage...
         </div>
       </div>
     );
