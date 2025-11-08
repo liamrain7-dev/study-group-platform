@@ -207,18 +207,25 @@ const ClassPage = () => {
             </div>
           ) : (
             studyGroups.map((group) => {
-              // Check if user is creator
+              // Check if user is creator - handle both ObjectId and populated objects
               const creatorId = group.createdBy?._id || group.createdBy;
-              const userId = user._id;
-              const isCreator = creatorId?.toString() === userId?.toString();
+              const userId = user?._id || user?.id;
               
-              // Check if user is a member (handle both ObjectId and populated objects)
-              const isMember = group.members?.some(
+              // Normalize IDs to strings for comparison (handle null/undefined)
+              const creatorIdStr = creatorId ? (creatorId.toString?.() || String(creatorId)) : '';
+              const userIdStr = userId ? (userId.toString?.() || String(userId)) : '';
+              
+              const isCreator = creatorIdStr && userIdStr && creatorIdStr === userIdStr;
+              
+              // Check if user is a member - handle both ObjectId and populated objects
+              const isMember = userIdStr && group.members?.some(
                 (member) => {
+                  if (!member) return false;
                   const memberId = member._id || member;
-                  return memberId?.toString() === userId?.toString();
+                  const memberIdStr = memberId ? (memberId.toString?.() || String(memberId)) : '';
+                  return memberIdStr === userIdStr;
                 }
-              );
+              ) || false;
               
               const isFull = group.members?.length >= group.maxMembers;
 
