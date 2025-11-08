@@ -82,5 +82,31 @@ router.post('/', auth, async (req, res) => {
   }
 });
 
+// Delete a class (only by creator)
+router.delete('/:id', auth, async (req, res) => {
+  try {
+    const classData = await Class.findById(req.params.id);
+    
+    if (!classData) {
+      return res.status(404).json({ message: 'Class not found' });
+    }
+
+    // Only allow creator to delete
+    if (classData.createdBy.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: 'You can only delete classes you created' });
+    }
+
+    await Class.findByIdAndDelete(req.params.id);
+
+    // Emit real-time update
+    const io = req.app.get('io');
+    io.to(`university-${classData.university}`).emit('class-deleted', req.params.id);
+
+    res.json({ message: 'Class deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;
 

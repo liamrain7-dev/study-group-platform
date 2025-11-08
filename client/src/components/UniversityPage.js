@@ -32,8 +32,13 @@ const UniversityPage = () => {
         setClasses((prev) => [classData, ...prev]);
       });
 
+      socket.on('class-deleted', (classId) => {
+        setClasses((prev) => prev.filter(c => c._id !== classId));
+      });
+
       return () => {
         socket.off('new-class');
+        socket.off('class-deleted');
       };
     }
   }, [socket, user]);
@@ -60,6 +65,21 @@ const UniversityPage = () => {
       setShowCreateClass(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create class');
+    }
+  };
+
+  const handleDeleteClass = async (classId, e) => {
+    e.stopPropagation(); // Prevent navigation when clicking delete
+    
+    if (!window.confirm('Are you sure you want to delete this class? This will also delete all study groups in it.')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/classes/${classId}`);
+      setClasses(classes.filter(c => c._id !== classId));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to delete class');
     }
   };
 
@@ -143,6 +163,15 @@ const UniversityPage = () => {
                 className="class-card"
                 onClick={() => navigate(`/class/${classItem._id}`)}
               >
+                {classItem.createdBy?._id === user._id && (
+                  <button
+                    className="delete-class-btn"
+                    onClick={(e) => handleDeleteClass(classItem._id, e)}
+                    title="Delete class"
+                  >
+                    ×
+                  </button>
+                )}
                 <h3>{classItem.name}</h3>
                 <p className="class-code">{classItem.code}</p>
                 {classItem.description && (
