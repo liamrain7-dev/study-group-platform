@@ -115,15 +115,21 @@ router.get('/me', require('../middleware/auth'), async (req, res) => {
   try {
     // Ensure university is populated
     await req.user.populate('university');
+    
+    // Convert to plain object to ensure _id is included
+    const userObj = req.user.toObject();
+    
     res.json({
       user: {
-        id: req.user._id,
-        email: req.user.email,
-        name: req.user.name,
-        university: req.user.university
+        _id: userObj._id,
+        id: userObj._id, // Include both for compatibility
+        email: userObj.email,
+        name: userObj.name,
+        university: userObj.university || req.user.university
       }
     });
   } catch (error) {
+    console.error('Error in /auth/me:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
