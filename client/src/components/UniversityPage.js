@@ -32,8 +32,6 @@ const UniversityPage = () => {
     }, 5000);
     
     // Make sure user has university before fetching classes
-    // Handle both user.id (from API) and user._id (if present)
-    const userId = user._id || user.id;
     const universityId = user.university?._id || user.university;
     
     if (user && user.university && universityId) {

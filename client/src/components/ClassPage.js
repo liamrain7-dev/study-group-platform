@@ -74,7 +74,7 @@ const ClassPage = () => {
     setError('');
 
     try {
-      const response = await api.post('/study-groups', {
+      await api.post('/study-groups', {
         ...newGroup,
         classId: id,
       });
