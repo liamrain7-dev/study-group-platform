@@ -268,7 +268,20 @@ const MyGroups = () => {
   // Early returns AFTER all hooks
   if (authLoading) {
     return (
-      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+      <div className="loading" style={{ 
+        zIndex: 9999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        fontSize: '1.5rem'
+      }}>
         <div>Loading...</div>
       </div>
     );
@@ -276,7 +289,20 @@ const MyGroups = () => {
 
   if (!user) {
     return (
-      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+      <div className="loading" style={{ 
+        zIndex: 9999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        fontSize: '1.5rem'
+      }}>
         <div>Redirecting to login...</div>
       </div>
     );

@@ -231,7 +231,20 @@ const UniversityPage = () => {
   // Early returns AFTER all hooks
   if (authLoading) {
     return (
-      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+      <div className="loading" style={{ 
+        zIndex: 9999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        fontSize: '1.5rem'
+      }}>
         <div>Loading...</div>
       </div>
     );
@@ -240,8 +253,23 @@ const UniversityPage = () => {
   // Error boundary catch
   if (renderError) {
     return (
-      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, padding: '40px', textAlign: 'center' }}>
-        <div style={{ color: 'white', fontSize: '1.2rem', marginBottom: '20px' }}>
+      <div className="loading" style={{ 
+        zIndex: 9999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0, 
+        padding: '40px', 
+        textAlign: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white'
+      }}>
+        <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>
           An error occurred: {renderError.message}
         </div>
         <button 
