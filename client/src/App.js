@@ -11,6 +11,23 @@ import './App.css';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
+  const [timeoutReached, setTimeoutReached] = React.useState(false);
+
+  React.useEffect(() => {
+    if (loading) {
+      // If loading takes more than 5 seconds, redirect to login
+      const timeout = setTimeout(() => {
+        console.warn('Loading timeout - redirecting to login');
+        setTimeoutReached(true);
+      }, 5000);
+
+      return () => clearTimeout(timeout);
+    }
+  }, [loading]);
+
+  if (timeoutReached) {
+    return <Navigate to="/login" />;
+  }
 
   if (loading) {
     return (

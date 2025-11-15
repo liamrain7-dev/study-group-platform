@@ -18,25 +18,17 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     
-    // Safety timeout - always stop loading after 5 seconds
-    const fallbackTimeout = setTimeout(() => {
-      console.warn('AuthContext: Loading timeout - forcing render');
-      setLoading(false);
-    }, 5000);
-    
     const fetchUser = async () => {
       try {
         const response = await api.get('/auth/me');
         setUser(response.data.user);
         setLoading(false);
-        clearTimeout(fallbackTimeout);
       } catch (error) {
         // If API fails, clear token
         console.error('Failed to fetch user:', error);
         localStorage.removeItem('token');
         setUser(null);
         setLoading(false);
-        clearTimeout(fallbackTimeout);
       }
     };
     
@@ -44,10 +36,7 @@ export const AuthProvider = ({ children }) => {
       fetchUser();
     } else {
       setLoading(false);
-      clearTimeout(fallbackTimeout);
     }
-    
-    return () => clearTimeout(fallbackTimeout);
   }, []);
 
   const login = async (email, password) => {
