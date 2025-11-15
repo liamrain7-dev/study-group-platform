@@ -22,22 +22,22 @@ const UniversityPage = () => {
 
   // All hooks must be called before any early returns
   useEffect(() => {
+    // Don't do anything if auth is still loading
+    if (authLoading) {
+      return;
+    }
+
     // Always set loading to false after a maximum of 5 seconds
     const maxLoadingTimeout = setTimeout(() => {
       console.warn('Max loading timeout reached - forcing render');
       setLoading(false);
     }, 5000);
 
-    // Don't do anything if auth is still loading
-    if (authLoading) {
-      return () => clearTimeout(maxLoadingTimeout);
-    }
-
     if (!user) {
       clearTimeout(maxLoadingTimeout);
       setLoading(false);
       navigate('/login');
-      return;
+      return () => clearTimeout(maxLoadingTimeout);
     }
     
     // Make sure user has university before fetching classes
@@ -359,25 +359,24 @@ const UniversityPage = () => {
   if (!university || !universityId) {
     console.error('University data issue:', { university, universityId, user });
     return (
-      <div className="loading">
-        <div>Error loading university data. Please refresh the page.</div>
-        <button 
-          onClick={() => window.location.reload()} 
-          style={{ marginTop: '20px', padding: '10px 20px' }}
-        >
-          Refresh Page
-        </button>
-      </div>
-    );
-  }
-
-  // Final safety check - ensure we have all required data before rendering
-  if (!user || !user.university || !universityName || !universityId) {
-    console.error('Missing required data for render:', { user, university: user?.university, universityName, universityId });
-    return (
-      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, padding: '40px', textAlign: 'center' }}>
-        <div style={{ color: 'white', fontSize: '1.2rem', marginBottom: '20px' }}>
-          Unable to load page data. Please try refreshing.
+      <div className="loading" style={{ 
+        zIndex: 9999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        padding: '40px',
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>
+          Error loading university data. Please refresh the page.
         </div>
         <button 
           onClick={() => window.location.reload()} 
@@ -388,6 +387,64 @@ const UniversityPage = () => {
       </div>
     );
   }
+
+  // Final safety check - be lenient to prevent blank pages
+  // If we have user and university, render even if some fields are missing
+  if (!user) {
+    // This should have been caught earlier, but just in case
+    return (
+      <div className="loading" style={{ 
+        zIndex: 9999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0, 
+        padding: '40px', 
+        textAlign: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white'
+      }}>
+        <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>
+          User not found. Redirecting...
+        </div>
+      </div>
+    );
+  }
+
+  if (!user.university) {
+    // This should have been caught earlier too
+    return (
+      <div className="loading" style={{ 
+        zIndex: 9999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0, 
+        padding: '40px', 
+        textAlign: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white'
+      }}>
+        <div style={{ fontSize: '1.2rem', marginBottom: '20px' }}>
+          University information not found. Redirecting...
+        </div>
+      </div>
+    );
+  }
+
+  // Use fallback values to prevent blank page
+  const safeUniversityName = universityName || 'University';
+  const safeUniversityId = universityId || (user.university?._id || user.university);
 
   return (
     <div className="university-page" style={{ minHeight: '100vh', position: 'relative' }}>
@@ -409,7 +466,7 @@ const UniversityPage = () => {
       
       <header className="university-header" style={{ position: 'relative', zIndex: 1 }}>
         <div>
-          <h1 style={{ color: '#667eea' }}>{universityName || 'University'}</h1>
+          <h1 style={{ color: '#667eea' }}>{safeUniversityName}</h1>
           <p style={{ color: '#666' }}>Welcome, {user?.name || 'User'}!</p>
           <div className="stats-info">
             <span>{usersInUniversity} {usersInUniversity === 1 ? 'student' : 'students'} at your university</span>

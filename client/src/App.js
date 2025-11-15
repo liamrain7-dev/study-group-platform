@@ -22,11 +22,14 @@ const PrivateRoute = ({ children }) => {
       }, 5000);
 
       return () => clearTimeout(timeout);
+    } else {
+      // Reset timeout if loading completes
+      setTimeoutReached(false);
     }
   }, [loading]);
 
   if (timeoutReached) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   if (loading) {
@@ -50,7 +53,12 @@ const PrivateRoute = ({ children }) => {
     );
   }
 
-  return user ? children : <Navigate to="/login" />;
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Always render children if we get here
+  return <>{children}</>;
 };
 
 function App() {
