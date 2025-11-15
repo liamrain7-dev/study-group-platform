@@ -21,7 +21,13 @@ export const AuthProvider = ({ children }) => {
     const fetchUser = async () => {
       try {
         const response = await api.get('/auth/me');
-        setUser(response.data.user);
+        if (response.data && response.data.user) {
+          setUser(response.data.user);
+        } else {
+          // Invalid response, clear token
+          localStorage.removeItem('token');
+          setUser(null);
+        }
         setLoading(false);
       } catch (error) {
         // If API fails, clear token
@@ -35,6 +41,8 @@ export const AuthProvider = ({ children }) => {
     if (token) {
       fetchUser();
     } else {
+      // No token, ensure user is null and loading is false
+      setUser(null);
       setLoading(false);
     }
   }, []);

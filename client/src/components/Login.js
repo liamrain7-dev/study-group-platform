@@ -13,17 +13,8 @@ const Login = () => {
   const { login, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
 
-  // If user is already logged in, redirect to university page (but only after auth is done loading)
-  // Only redirect if we're not in the middle of a login attempt
-  useEffect(() => {
-    if (!authLoading && user && !loading) {
-      // Small delay to prevent flash of login page
-      const timer = setTimeout(() => {
-        navigate('/university');
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [user, authLoading, loading, navigate]);
+  // Don't auto-redirect - let users access login page even if logged in
+  // They can manually navigate away or use logout
 
   useEffect(() => {
     fetchTotalUsers();
