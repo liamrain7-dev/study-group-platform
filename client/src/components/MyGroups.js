@@ -283,7 +283,24 @@ const MyGroups = () => {
   }
 
   if (loading) {
-    return <div className="loading">Loading your groups...</div>;
+    return (
+      <div className="loading" style={{ 
+        zIndex: 9999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        fontSize: '1.5rem'
+      }}>
+        <div>Loading your groups...</div>
+      </div>
+    );
   }
 
   return (

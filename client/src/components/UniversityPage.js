@@ -259,8 +259,21 @@ const UniversityPage = () => {
 
   if (loading) {
     return (
-      <div className="loading">
-        <div>Loading...</div>
+      <div className="loading" style={{ 
+        zIndex: 9999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        fontSize: '1.5rem'
+      }}>
+        <div>Loading classes...</div>
       </div>
     );
   }
@@ -268,7 +281,20 @@ const UniversityPage = () => {
   // If user doesn't have university, show loading while redirecting
   if (!user) {
     return (
-      <div className="loading">
+      <div className="loading" style={{ 
+        zIndex: 9999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        fontSize: '1.5rem'
+      }}>
         <div>Redirecting to login...</div>
       </div>
     );
@@ -277,7 +303,20 @@ const UniversityPage = () => {
   if (!user.university) {
     console.error('User exists but university is missing:', user);
     return (
-      <div className="loading">
+      <div className="loading" style={{ 
+        zIndex: 9999, 
+        position: 'fixed', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        bottom: 0,
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        color: 'white',
+        fontSize: '1.5rem'
+      }}>
         <div>University information not found. Redirecting...</div>
       </div>
     );
