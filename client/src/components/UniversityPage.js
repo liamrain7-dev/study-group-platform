@@ -206,6 +206,23 @@ const UniversityPage = () => {
     }
   }, [loading, user, navigate]);
 
+  // Debug: Log render state (must be before early returns)
+  useEffect(() => {
+    const university = user?.university;
+    const universityName = typeof university === 'object' && university ? (university.name || 'University') : 'University';
+    const universityId = typeof university === 'object' && university ? (university._id || university.id) : university;
+    
+    console.log('UniversityPage render state:', {
+      hasUser: !!user,
+      hasUniversity: !!user?.university,
+      universityName,
+      universityId,
+      loading,
+      authLoading,
+      classesCount: classes.length
+    });
+  }, [user, loading, authLoading, classes.length]);
+
   // Early returns AFTER all hooks
   if (authLoading) {
     return (
@@ -299,19 +316,6 @@ const UniversityPage = () => {
       </div>
     );
   }
-
-  // Debug: Log render state
-  useEffect(() => {
-    console.log('UniversityPage render state:', {
-      hasUser: !!user,
-      hasUniversity: !!user?.university,
-      universityName,
-      universityId,
-      loading,
-      authLoading,
-      classesCount: classes.length
-    });
-  }, [user, universityName, universityId, loading, authLoading, classes.length]);
 
   return (
     <div className="university-page" style={{ minHeight: '100vh', position: 'relative' }}>
