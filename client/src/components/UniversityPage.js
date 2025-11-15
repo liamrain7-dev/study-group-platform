@@ -20,35 +20,7 @@ const UniversityPage = () => {
   const [fetchError, setFetchError] = useState(null);
   const [renderError, setRenderError] = useState(null);
 
-  // If auth is still loading, show loading screen
-  if (authLoading) {
-    return (
-      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-        <div>Loading...</div>
-      </div>
-    );
-  }
-
-  // Error boundary catch
-  if (renderError) {
-    return (
-      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, padding: '40px', textAlign: 'center' }}>
-        <div style={{ color: 'white', fontSize: '1.2rem', marginBottom: '20px' }}>
-          An error occurred: {renderError.message}
-        </div>
-        <button 
-          onClick={() => {
-            setRenderError(null);
-            window.location.reload();
-          }} 
-          style={{ padding: '10px 20px', fontSize: '1rem', cursor: 'pointer' }}
-        >
-          Reload Page
-        </button>
-      </div>
-    );
-  }
-
+  // All hooks must be called before any early returns
   useEffect(() => {
     // Always set loading to false after a maximum of 5 seconds
     const maxLoadingTimeout = setTimeout(() => {
@@ -233,6 +205,35 @@ const UniversityPage = () => {
       navigate('/login');
     }
   }, [loading, user, navigate]);
+
+  // Early returns AFTER all hooks
+  if (authLoading) {
+    return (
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
+  // Error boundary catch
+  if (renderError) {
+    return (
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, padding: '40px', textAlign: 'center' }}>
+        <div style={{ color: 'white', fontSize: '1.2rem', marginBottom: '20px' }}>
+          An error occurred: {renderError.message}
+        </div>
+        <button 
+          onClick={() => {
+            setRenderError(null);
+            window.location.reload();
+          }} 
+          style={{ padding: '10px 20px', fontSize: '1rem', cursor: 'pointer' }}
+        >
+          Reload Page
+        </button>
+      </div>
+    );
+  }
 
   if (loading) {
     return (

@@ -14,6 +14,27 @@ const ChatBox = ({ type, classId, studyGroupId, onLeave, onRejoin, hasLeftChat }
   const messagesEndRef = useRef(null);
   const chatId = type === 'class' ? classId : studyGroupId;
 
+  const fetchMessages = async () => {
+    try {
+      setLoading(true);
+      const endpoint = type === 'class' 
+        ? `/chat/class/${classId}` 
+        : `/chat/study-group/${studyGroupId}`;
+      const response = await api.get(endpoint);
+      setMessages(response.data.chat?.messages || []);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNewMessage = (data) => {
+    if (data.chatId && data.message) {
+      setMessages((prev) => [...prev, data.message]);
+    }
+  };
+
   useEffect(() => {
     if (!chatId) return;
 
@@ -39,32 +60,12 @@ const ChatBox = ({ type, classId, studyGroupId, onLeave, onRejoin, hasLeftChat }
         }
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [socket, chatId, type]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  const fetchMessages = async () => {
-    try {
-      setLoading(true);
-      const endpoint = type === 'class' 
-        ? `/chat/class/${classId}` 
-        : `/chat/study-group/${studyGroupId}`;
-      const response = await api.get(endpoint);
-      setMessages(response.data.chat?.messages || []);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleNewMessage = (data) => {
-    if (data.chatId && data.message) {
-      setMessages((prev) => [...prev, data.message]);
-    }
-  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
