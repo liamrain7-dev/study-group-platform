@@ -28,6 +28,16 @@ const studyGroupSchema = new mongoose.Schema({
     type: Number,
     default: 10
   },
+  isPrivate: {
+    type: Boolean,
+    default: false
+  },
+  inviteCode: {
+    type: String,
+    trim: true,
+    unique: true,
+    sparse: true
+  },
   createdAt: {
     type: Date,
     default: Date.now

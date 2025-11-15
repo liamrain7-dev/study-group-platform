@@ -106,7 +106,10 @@
 
 .group-meta {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
+  align-items: center;
+  gap: 8px;
   font-size: 0.9rem;
   color: #999;
   margin-bottom: 15px;
@@ -267,5 +270,96 @@
   border-radius: 8px;
   margin-bottom: 20px;
   border: 1px solid #fcc;
+}
+
+.private-badge {
+  background: #ff9800;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.invite-code-display {
+  margin: 10px 0;
+  padding: 10px;
+  background: #f0f0f0;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+}
+
+.invite-code-display code {
+  background: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: bold;
+  color: #007bff;
+  margin-left: 8px;
+}
+
+.invite-code-input-group {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.invite-code-input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-family: monospace;
+  text-align: center;
+}
+
+.invite-code-input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+.btn-chat-toggle {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.2s;
+  margin-top: 10px;
+  width: 100%;
+}
+
+.btn-chat-toggle:hover {
+  background: #218838;
+}
+
+.class-chat-section {
+  margin-top: 40px;
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 

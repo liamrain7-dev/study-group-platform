@@ -18,10 +18,15 @@ router.get('/class/:classId', auth, async (req, res) => {
   }
 });
 
+// Generate a random invite code
+const generateInviteCode = () => {
+  return Math.random().toString(36).substring(2, 8).toUpperCase();
+};
+
 // Create a new study group
 router.post('/', auth, async (req, res) => {
   try {
-    const { name, classId, description, maxMembers } = req.body;
+    const { name, classId, description, maxMembers, isPrivate } = req.body;
 
     const classData = await Class.findById(classId);
     if (!classData) {
@@ -33,6 +38,8 @@ router.post('/', auth, async (req, res) => {
       class: classId,
       description,
       maxMembers: maxMembers || 10,
+      isPrivate: isPrivate || false,
+      inviteCode: isPrivate ? generateInviteCode() : undefined,
       createdBy: req.user._id,
       members: [req.user._id]
     });
@@ -58,6 +65,7 @@ router.post('/', auth, async (req, res) => {
 // Join a study group
 router.post('/:id/join', auth, async (req, res) => {
   try {
+    const { inviteCode } = req.body;
     const studyGroup = await StudyGroup.findById(req.params.id);
     if (!studyGroup) {
       return res.status(404).json({ message: 'Study group not found' });
@@ -69,6 +77,13 @@ router.post('/:id/join', auth, async (req, res) => {
 
     if (studyGroup.members.length >= studyGroup.maxMembers) {
       return res.status(400).json({ message: 'Study group is full' });
+    }
+
+    // Check if group is private and verify invite code
+    if (studyGroup.isPrivate) {
+      if (!inviteCode || inviteCode.toUpperCase() !== studyGroup.inviteCode) {
+        return res.status(403).json({ message: 'Invalid invite code' });
+      }
     }
 
     studyGroup.members.push(req.user._id);
@@ -142,7 +157,7 @@ router.put('/:id', auth, async (req, res) => {
       return res.status(403).json({ message: 'Only the creator can edit this study group' });
     }
 
-    const { name, description, maxMembers } = req.body;
+    const { name, description, maxMembers, isPrivate } = req.body;
     
     if (name) studyGroup.name = name;
     if (description !== undefined) studyGroup.description = description;
@@ -151,6 +166,15 @@ router.put('/:id', auth, async (req, res) => {
         return res.status(400).json({ message: 'Max members cannot be less than current members' });
       }
       studyGroup.maxMembers = maxMembers;
+    }
+    if (isPrivate !== undefined) {
+      studyGroup.isPrivate = isPrivate;
+      // Generate invite code if switching to private and doesn't have one
+      if (isPrivate && !studyGroup.inviteCode) {
+        studyGroup.inviteCode = generateInviteCode();
+      } else if (!isPrivate) {
+        studyGroup.inviteCode = undefined;
+      }
     }
 
     await studyGroup.save();
