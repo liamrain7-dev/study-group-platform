@@ -21,6 +21,7 @@ const ClassPage = () => {
   const [showInviteCodeInput, setShowInviteCodeInput] = useState({});
   const [inviteCodes, setInviteCodes] = useState({});
   const [openChatGroupId, setOpenChatGroupId] = useState(null);
+  const [isGeneralChatOpen, setIsGeneralChatOpen] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -129,8 +130,8 @@ const ClassPage = () => {
     try {
       await api.post(`/chat/class/${id}/rejoin`);
       setHasLeftChat(false);
-      // Refresh messages
-      window.location.reload();
+      setIsGeneralChatOpen(true);
+      // The ChatBox component will handle fetching messages when it mounts
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to rejoin chat');
     }
@@ -250,6 +251,41 @@ const ClassPage = () => {
         )}
 
         <div className="study-groups-grid">
+          {/* General Chat Card - Always visible */}
+          <div className="study-group-card general-chat-card">
+            <h3>General Chat</h3>
+            <p className="group-description">Class-wide discussion for all students</p>
+            <div className="group-meta">
+              <span>All students in {classData.name}</span>
+            </div>
+            {hasLeftChat ? (
+              <div className="group-member-actions">
+                <button
+                  onClick={handleRejoinClassChat}
+                  className="btn-rejoin-chat"
+                >
+                  Rejoin Chat
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsGeneralChatOpen(!isGeneralChatOpen)}
+                className="btn-chat-toggle"
+              >
+                {isGeneralChatOpen ? 'Close Chat' : 'Open Chat'}
+              </button>
+            )}
+            {isGeneralChatOpen && !hasLeftChat && (
+              <ChatBox
+                type="class"
+                classId={id}
+                onLeave={handleLeaveClassChat}
+                onRejoin={handleRejoinClassChat}
+                hasLeftChat={hasLeftChat}
+              />
+            )}
+          </div>
+
           {studyGroups.length === 0 ? (
             <div className="empty-state">
               <p>No study groups yet. Create one to get started!</p>
@@ -398,17 +434,6 @@ const ClassPage = () => {
               );
             })
           )}
-        </div>
-
-        {/* Class Chat */}
-        <div className="class-chat-section">
-          <ChatBox
-            type="class"
-            classId={id}
-            onLeave={handleLeaveClassChat}
-            onRejoin={handleRejoinClassChat}
-            hasLeftChat={hasLeftChat}
-          />
         </div>
       </div>
     </div>

@@ -355,11 +355,29 @@
   background: #218838;
 }
 
-.class-chat-section {
-  margin-top: 40px;
-  background: white;
-  border-radius: 12px;
-  padding: 20px;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+.general-chat-card {
+  border: 2px solid #667eea;
+}
+
+.general-chat-card h3 {
+  color: #667eea;
+}
+
+.btn-rejoin-chat {
+  width: 100%;
+  padding: 12px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.2s;
+  margin-top: 10px;
+}
+
+.btn-rejoin-chat:hover {
+  background: #45a049;
 }
 
