@@ -375,7 +375,7 @@ const UniversityPage = () => {
             onClick={() => setShowCreateClass(!showCreateClass)}
             className="btn-primary"
           >
-            {showCreateClass ? 'Cancel' : '+ Create Class'}
+            {showCreateClass ? 'Cancel' : "Can't find your class? Create one for everyone to see!"}
           </button>
         </div>
 
@@ -403,7 +403,7 @@ const UniversityPage = () => {
 
         {showCreateClass && (
           <div className="create-class-form">
-            <h3>Can't find your class? Create one for everyone to see!</h3>
+            <h3>Create New Class</h3>
             {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleCreateClass}>
               <div className="form-group">
