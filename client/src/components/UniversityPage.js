@@ -18,27 +18,50 @@ const UniversityPage = () => {
   const [usersInUniversity, setUsersInUniversity] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [fetchError, setFetchError] = useState(null);
+  const [renderError, setRenderError] = useState(null);
 
   // If auth is still loading, show loading screen
   if (authLoading) {
     return (
-      <div className="loading">
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
         <div>Loading...</div>
       </div>
     );
   }
 
+  // Error boundary catch
+  if (renderError) {
+    return (
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, padding: '40px', textAlign: 'center' }}>
+        <div style={{ color: 'white', fontSize: '1.2rem', marginBottom: '20px' }}>
+          An error occurred: {renderError.message}
+        </div>
+        <button 
+          onClick={() => {
+            setRenderError(null);
+            window.location.reload();
+          }} 
+          style={{ padding: '10px 20px', fontSize: '1rem', cursor: 'pointer' }}
+        >
+          Reload Page
+        </button>
+      </div>
+    );
+  }
+
   useEffect(() => {
+    // Always set loading to false after a maximum of 5 seconds
+    const maxLoadingTimeout = setTimeout(() => {
+      console.warn('Max loading timeout reached - forcing render');
+      setLoading(false);
+    }, 5000);
+
     if (!user) {
+      clearTimeout(maxLoadingTimeout);
+      setLoading(false);
       navigate('/login');
       return;
     }
-    
-    // Safety timeout - always stop loading after 5 seconds
-    const safetyTimeout = setTimeout(() => {
-      console.warn('Loading timeout - forcing render');
-      setLoading(false);
-    }, 5000);
     
     // Make sure user has university before fetching classes
     const universityId = user.university?._id || user.university;
@@ -49,10 +72,10 @@ const UniversityPage = () => {
       console.error('User or university missing:', { user, university: user?.university });
       setLoading(false);
       setFetchError('University information not found');
-      clearTimeout(safetyTimeout);
+      clearTimeout(maxLoadingTimeout);
     }
     
-    return () => clearTimeout(safetyTimeout);
+    return () => clearTimeout(maxLoadingTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate]);
 
@@ -262,11 +285,13 @@ const UniversityPage = () => {
   if (!user || !user.university || !universityName || !universityId) {
     console.error('Missing required data for render:', { user, university: user?.university, universityName, universityId });
     return (
-      <div className="loading" style={{ padding: '40px', textAlign: 'center' }}>
-        <div>Unable to load page data. Please try refreshing.</div>
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, padding: '40px', textAlign: 'center' }}>
+        <div style={{ color: 'white', fontSize: '1.2rem', marginBottom: '20px' }}>
+          Unable to load page data. Please try refreshing.
+        </div>
         <button 
           onClick={() => window.location.reload()} 
-          style={{ marginTop: '20px', padding: '10px 20px', cursor: 'pointer' }}
+          style={{ marginTop: '20px', padding: '10px 20px', fontSize: '1rem', cursor: 'pointer' }}
         >
           Refresh Page
         </button>
@@ -274,12 +299,41 @@ const UniversityPage = () => {
     );
   }
 
+  // Debug: Log render state
+  useEffect(() => {
+    console.log('UniversityPage render state:', {
+      hasUser: !!user,
+      hasUniversity: !!user?.university,
+      universityName,
+      universityId,
+      loading,
+      authLoading,
+      classesCount: classes.length
+    });
+  }, [user, universityName, universityId, loading, authLoading, classes.length]);
+
   return (
-    <div className="university-page">
-      <header className="university-header">
+    <div className="university-page" style={{ minHeight: '100vh', position: 'relative' }}>
+      {/* Debug: Always visible test element */}
+      <div style={{ 
+        position: 'absolute', 
+        top: 0, 
+        left: 0, 
+        right: 0, 
+        background: 'rgba(255, 0, 0, 0.1)', 
+        padding: '10px', 
+        zIndex: 10000,
+        display: loading ? 'block' : 'none',
+        color: 'white',
+        fontSize: '14px'
+      }}>
+        DEBUG: Loading={loading.toString()}, HasUser={!!user}, HasUniv={!!user?.university}
+      </div>
+      
+      <header className="university-header" style={{ position: 'relative', zIndex: 1 }}>
         <div>
-          <h1>{universityName || 'University'}</h1>
-          <p>Welcome, {user?.name || 'User'}!</p>
+          <h1 style={{ color: '#667eea' }}>{universityName || 'University'}</h1>
+          <p style={{ color: '#666' }}>Welcome, {user?.name || 'User'}!</p>
           <div className="stats-info">
             <span>{usersInUniversity} {usersInUniversity === 1 ? 'student' : 'students'} at your university</span>
           </div>
