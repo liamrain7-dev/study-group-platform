@@ -13,15 +13,7 @@ const MyGroups = () => {
   const [editForm, setEditForm] = useState({ name: '', description: '', maxMembers: 10 });
   const [error, setError] = useState('');
 
-  // If auth is still loading, show loading screen
-  if (authLoading) {
-    return (
-      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-        <div>Loading...</div>
-      </div>
-    );
-  }
-
+  // All hooks must be called before any early returns
   useEffect(() => {
     // Always set loading to false after a maximum of 5 seconds
     const maxLoadingTimeout = setTimeout(() => {
@@ -29,17 +21,19 @@ const MyGroups = () => {
       setLoading(false);
     }, 5000);
 
-    if (!user) {
+    if (!authLoading && !user) {
       clearTimeout(maxLoadingTimeout);
       setLoading(false);
       navigate('/login');
       return;
     }
     
-    fetchGroups();
+    if (!authLoading && user) {
+      fetchGroups();
+    }
     
     return () => clearTimeout(maxLoadingTimeout);
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const fetchGroups = async () => {
     setLoading(true);
@@ -270,6 +264,15 @@ const MyGroups = () => {
       </div>
     );
   };
+
+  // Early returns AFTER all hooks
+  if (authLoading) {
+    return (
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   if (!user) {
     return (

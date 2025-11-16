@@ -23,15 +23,7 @@ const ClassPage = () => {
   const [openChatGroupId, setOpenChatGroupId] = useState(null);
   const [isGeneralChatOpen, setIsGeneralChatOpen] = useState(false);
 
-  // If auth is still loading, show loading screen
-  if (authLoading) {
-    return (
-      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-        <div>Loading...</div>
-      </div>
-    );
-  }
-
+  // All hooks must be called before any early returns
   useEffect(() => {
     // Always set loading to false after a maximum of 5 seconds
     const maxLoadingTimeout = setTimeout(() => {
@@ -39,21 +31,23 @@ const ClassPage = () => {
       setLoading(false);
     }, 5000);
 
-    if (!user) {
+    if (!authLoading && !user) {
       clearTimeout(maxLoadingTimeout);
       setLoading(false);
       navigate('/login');
       return;
     }
     
-    fetchClassData();
+    if (!authLoading && user && id) {
+      fetchClassData();
+    }
     
     return () => clearTimeout(maxLoadingTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, user, navigate]);
+  }, [id, user, authLoading, navigate]);
 
   useEffect(() => {
-    if (socket && id) {
+    if (socket && id && !authLoading) {
       socket.emit('join-class', id);
 
       socket.on('new-study-group', (group) => {
@@ -81,7 +75,7 @@ const ClassPage = () => {
         socket.off('study-group-deleted');
       };
     }
-  }, [socket, id]);
+  }, [socket, id, authLoading, user]);
 
   const fetchClassData = async () => {
     if (!user || !id) {
@@ -198,6 +192,15 @@ const ClassPage = () => {
       alert(err.response?.data?.message || 'Failed to disband study group');
     }
   };
+
+  // Early returns AFTER all hooks
+  if (authLoading) {
+    return (
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
