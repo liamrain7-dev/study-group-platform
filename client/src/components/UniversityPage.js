@@ -6,7 +6,7 @@ import api from '../services/api';
 import './UniversityPage.css';
 
 const UniversityPage = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, loading: authLoading } = useAuth();
   const socket = useSocket();
   const navigate = useNavigate();
   const [classes, setClasses] = useState([]);
@@ -18,6 +18,15 @@ const UniversityPage = () => {
   const [usersInUniversity, setUsersInUniversity] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [fetchError, setFetchError] = useState(null);
+
+  // If auth is still loading, show loading screen
+  if (authLoading) {
+    return (
+      <div className="loading">
+        <div>Loading...</div>
+      </div>
+    );
+  }
 
   useEffect(() => {
     if (!user) {
@@ -197,17 +206,35 @@ const UniversityPage = () => {
   // Redirect effect if user or university is missing
   useEffect(() => {
     if (!loading && (!user || !user.university)) {
+      console.warn('Redirecting to login - user or university missing', { user, hasUniversity: !!user?.university });
       navigate('/login');
     }
   }, [loading, user, navigate]);
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="loading">
+        <div>Loading...</div>
+      </div>
+    );
   }
 
   // If user doesn't have university, show loading while redirecting
-  if (!user || !user.university) {
-    return <div className="loading">Redirecting...</div>;
+  if (!user) {
+    return (
+      <div className="loading">
+        <div>Redirecting to login...</div>
+      </div>
+    );
+  }
+
+  if (!user.university) {
+    console.error('User exists but university is missing:', user);
+    return (
+      <div className="loading">
+        <div>University information not found. Redirecting...</div>
+      </div>
+    );
   }
 
   // Get university data - handle both populated object and ID
@@ -215,17 +242,44 @@ const UniversityPage = () => {
   const universityName = typeof university === 'object' && university ? (university.name || 'University') : 'University';
   const universityId = typeof university === 'object' && university ? (university._id || university.id) : university;
   
-  // Debug logging (can be removed in production)
+  // Debug logging
   if (!university || !universityId) {
-    console.warn('University data issue:', { university, universityId, user });
+    console.error('University data issue:', { university, universityId, user });
+    return (
+      <div className="loading">
+        <div>Error loading university data. Please refresh the page.</div>
+        <button 
+          onClick={() => window.location.reload()} 
+          style={{ marginTop: '20px', padding: '10px 20px' }}
+        >
+          Refresh Page
+        </button>
+      </div>
+    );
+  }
+
+  // Final safety check - ensure we have all required data before rendering
+  if (!user || !user.university || !universityName || !universityId) {
+    console.error('Missing required data for render:', { user, university: user?.university, universityName, universityId });
+    return (
+      <div className="loading" style={{ padding: '40px', textAlign: 'center' }}>
+        <div>Unable to load page data. Please try refreshing.</div>
+        <button 
+          onClick={() => window.location.reload()} 
+          style={{ marginTop: '20px', padding: '10px 20px', cursor: 'pointer' }}
+        >
+          Refresh Page
+        </button>
+      </div>
+    );
   }
 
   return (
     <div className="university-page">
       <header className="university-header">
         <div>
-          <h1>{universityName}</h1>
-          <p>Welcome, {user?.name}!</p>
+          <h1>{universityName || 'University'}</h1>
+          <p>Welcome, {user?.name || 'User'}!</p>
           <div className="stats-info">
             <span>{usersInUniversity} {usersInUniversity === 1 ? 'student' : 'students'} at your university</span>
           </div>
