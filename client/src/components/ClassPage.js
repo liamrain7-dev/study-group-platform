@@ -8,7 +8,7 @@ import './ClassPage.css';
 
 const ClassPage = () => {
   const { id } = useParams();
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const socket = useSocket();
   const navigate = useNavigate();
   const [classData, setClassData] = useState(null);
@@ -23,12 +23,32 @@ const ClassPage = () => {
   const [openChatGroupId, setOpenChatGroupId] = useState(null);
   const [isGeneralChatOpen, setIsGeneralChatOpen] = useState(false);
 
+  // If auth is still loading, show loading screen
+  if (authLoading) {
+    return (
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
   useEffect(() => {
+    // Always set loading to false after a maximum of 5 seconds
+    const maxLoadingTimeout = setTimeout(() => {
+      console.warn('ClassPage: Max loading timeout reached - forcing render');
+      setLoading(false);
+    }, 5000);
+
     if (!user) {
+      clearTimeout(maxLoadingTimeout);
+      setLoading(false);
       navigate('/login');
       return;
     }
+    
     fetchClassData();
+    
+    return () => clearTimeout(maxLoadingTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user, navigate]);
 
@@ -64,16 +84,28 @@ const ClassPage = () => {
   }, [socket, id]);
 
   const fetchClassData = async () => {
+    if (!user || !id) {
+      setLoading(false);
+      return;
+    }
+    
     try {
       const response = await api.get(`/classes/${id}`);
       setClassData(response.data);
       setStudyGroups(response.data.studyGroups || []);
       
       // Check if user has left chat
-      const chatResponse = await api.get(`/chat/class/${id}`);
-      setHasLeftChat(chatResponse.data.chat?.hasLeftChat || false);
+      try {
+        const chatResponse = await api.get(`/chat/class/${id}`);
+        setHasLeftChat(chatResponse.data.chat?.hasLeftChat || false);
+      } catch (chatError) {
+        // Chat might not exist yet, that's okay
+        console.log('Chat not found or error:', chatError);
+        setHasLeftChat(false);
+      }
     } catch (error) {
       console.error('Error fetching class:', error);
+      setError('Failed to load class data. Please try refreshing.');
     } finally {
       setLoading(false);
     }
@@ -168,17 +200,41 @@ const ClassPage = () => {
   };
 
   if (loading) {
-    return <div className="loading">Loading...</div>;
+    return (
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <div>Loading class data...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <div>Redirecting to login...</div>
+      </div>
+    );
   }
 
   if (!classData) {
-    return <div className="error-message">Class not found</div>;
+    return (
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, padding: '40px', textAlign: 'center' }}>
+        <div style={{ color: 'white', fontSize: '1.2rem', marginBottom: '20px' }}>
+          {error || 'Class not found'}
+        </div>
+        <button 
+          onClick={() => navigate('/university')} 
+          style={{ marginTop: '20px', padding: '10px 20px', fontSize: '1rem', cursor: 'pointer' }}
+        >
+          Go to Homepage
+        </button>
+      </div>
+    );
   }
 
   return (
-    <div className="class-page">
-      <button onClick={() => navigate(-1)} className="btn-back">
-        ← Back
+    <div className="class-page" style={{ minHeight: '100vh', position: 'relative' }}>
+      <button onClick={() => navigate('/university')} className="btn-back">
+        ← Home
       </button>
       <header className="class-header">
         <div>

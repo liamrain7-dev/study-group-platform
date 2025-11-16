@@ -10,8 +10,15 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [totalUsers, setTotalUsers] = useState(0);
-  const { login } = useAuth();
+  const { login, user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  // If user is already logged in, redirect to university page
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate('/university');
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     fetchTotalUsers();

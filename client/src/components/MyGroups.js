@@ -5,7 +5,7 @@ import api from '../services/api';
 import './MyGroups.css';
 
 const MyGroups = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const [allGroups, setAllGroups] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -13,12 +13,32 @@ const MyGroups = () => {
   const [editForm, setEditForm] = useState({ name: '', description: '', maxMembers: 10 });
   const [error, setError] = useState('');
 
+  // If auth is still loading, show loading screen
+  if (authLoading) {
+    return (
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <div>Loading...</div>
+      </div>
+    );
+  }
+
   useEffect(() => {
+    // Always set loading to false after a maximum of 5 seconds
+    const maxLoadingTimeout = setTimeout(() => {
+      console.warn('MyGroups: Max loading timeout reached - forcing render');
+      setLoading(false);
+    }, 5000);
+
     if (!user) {
+      clearTimeout(maxLoadingTimeout);
+      setLoading(false);
       navigate('/login');
       return;
     }
+    
     fetchGroups();
+    
+    return () => clearTimeout(maxLoadingTimeout);
   }, [user, navigate]);
 
   const fetchGroups = async () => {
@@ -250,6 +270,14 @@ const MyGroups = () => {
       </div>
     );
   };
+
+  if (!user) {
+    return (
+      <div className="loading" style={{ zIndex: 9999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
+        <div>Redirecting to login...</div>
+      </div>
+    );
+  }
 
   if (loading) {
     return <div className="loading">Loading your groups...</div>;
