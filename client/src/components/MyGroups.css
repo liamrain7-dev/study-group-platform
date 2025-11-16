@@ -159,14 +159,9 @@
   line-height: 1.5;
 }
 
-.group-meta {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-  color: #999;
-  margin-bottom: 15px;
-  padding-top: 15px;
-  border-top: 1px solid #eee;
+.created-badge {
+  color: #667eea;
+  font-weight: 600;
 }
 
 .group-members {

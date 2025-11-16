@@ -138,14 +138,54 @@
   font-size: 0.9rem;
 }
 
-.member-badge {
+.group-member-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.btn-in-group {
+  width: 100%;
+  padding: 12px;
   background: #667eea;
   color: white;
-  padding: 8px 16px;
+  border: none;
   border-radius: 8px;
-  text-align: center;
+  font-size: 1rem;
   font-weight: 600;
-  margin-top: 10px;
+  cursor: default;
+  opacity: 0.8;
+}
+
+.btn-leave-group {
+  width: 100%;
+  padding: 12px;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-disband-group {
+  width: 100%;
+  padding: 12px;
+  background: #ff6b35;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-disband-group:hover {
+  background: #e55a2b;
 }
 
 .btn-disabled {

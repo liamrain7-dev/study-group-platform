@@ -32,8 +32,6 @@ const UniversityPage = () => {
     }, 5000);
     
     // Make sure user has university before fetching classes
-    // Handle both user.id (from API) and user._id (if present)
-    const userId = user._id || user.id;
     const universityId = user.university?._id || user.university;
     
     if (user && user.university && universityId) {
@@ -77,14 +75,8 @@ const UniversityPage = () => {
         });
       });
 
-      socket.on('class-deleted', (classId) => {
-        setAllClasses((prev) => prev.filter(c => c._id !== classId));
-        setClasses((prev) => prev.filter(c => c._id !== classId));
-      });
-
       return () => {
         socket.off('new-class');
-        socket.off('class-deleted');
       };
     }
   }, [socket, user, searchQuery]);
@@ -171,13 +163,13 @@ const UniversityPage = () => {
     setError('');
 
     try {
-      // Remove any spaces from course name (safety check)
-      const courseNameWithoutSpaces = newClass.code.replace(/\s/g, '');
+      // Remove spaces and auto-capitalize the course name
+      const processedCode = newClass.code.replace(/\s/g, '').toUpperCase().trim();
       
       // Use course name for both name and code fields
       const classData = {
-        name: courseNameWithoutSpaces,
-        code: courseNameWithoutSpaces,
+        name: processedCode,
+        code: processedCode,
         description: newClass.description
       };
       const response = await api.post('/classes', classData);
@@ -202,21 +194,6 @@ const UniversityPage = () => {
     }
   };
 
-  const handleDeleteClass = async (classId, e) => {
-    e.stopPropagation(); // Prevent navigation when clicking delete
-    
-    if (!window.confirm('Are you sure you want to delete this class? This will also delete all study groups in it.')) {
-      return;
-    }
-
-    try {
-      await api.delete(`/classes/${classId}`);
-      setClasses(classes.filter(c => c._id !== classId));
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to delete class');
-    }
-  };
-
   // Redirect effect if user or university is missing
   useEffect(() => {
     if (!loading && (!user || !user.university)) {
@@ -237,7 +214,6 @@ const UniversityPage = () => {
   const university = user.university;
   const universityName = typeof university === 'object' && university ? (university.name || 'University') : 'University';
   const universityId = typeof university === 'object' && university ? (university._id || university.id) : university;
-  const userId = user._id || user.id;
   
   // Debug logging (can be removed in production)
   if (!university || !universityId) {
@@ -323,9 +299,9 @@ const UniversityPage = () => {
                   type="text"
                   value={newClass.code}
                   onChange={(e) => {
-                    // Remove all spaces from the input
-                    const valueWithoutSpaces = e.target.value.replace(/\s/g, '');
-                    setNewClass({ ...newClass, code: valueWithoutSpaces });
+                    // Remove spaces and auto-capitalize as user types
+                    const value = e.target.value.replace(/\s/g, '').toUpperCase();
+                    setNewClass({ ...newClass, code: value });
                   }}
                   required
                   placeholder="e.g., CS135"
@@ -356,9 +332,9 @@ const UniversityPage = () => {
               <button
                 onClick={() => {
                   setShowCreateClass(true);
-                  // Use search query as course name, removing spaces
+                  // Use search query as course name, removing spaces and capitalizing
                   setNewClass({ 
-                    code: searchQuery.replace(/\s/g, ''), 
+                    code: searchQuery.replace(/\s/g, '').toUpperCase().trim(), 
                     description: '' 
                   });
                   setSearchQuery('');
@@ -379,15 +355,6 @@ const UniversityPage = () => {
                 className="class-card"
                 onClick={() => navigate(`/class/${classItem._id}`)}
               >
-                {(classItem.createdBy?._id === userId || classItem.createdBy?.id === userId) && (
-                  <button
-                    className="delete-class-btn"
-                    onClick={(e) => handleDeleteClass(classItem._id, e)}
-                    title="Delete class"
-                  >
-                    ×
-                  </button>
-                )}
                 <h3>
                   {searchQuery ? highlightMatch(classItem.name, searchQuery) : classItem.name}
                 </h3>
@@ -399,7 +366,6 @@ const UniversityPage = () => {
                 )}
                 <div className="class-meta">
                   <span>{classItem.studyGroups?.length || 0} Study Groups</span>
-                  <span>Created by {classItem.createdBy?.name}</span>
                 </div>
               </div>
             ))

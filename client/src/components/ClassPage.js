@@ -31,7 +31,12 @@ const ClassPage = () => {
       socket.emit('join-class', id);
 
       socket.on('new-study-group', (group) => {
-        setStudyGroups((prev) => [group, ...prev]);
+        setStudyGroups((prev) => {
+          // Check if group already exists to prevent duplicates
+          const exists = prev.some(g => g._id === group._id);
+          if (exists) return prev;
+          return [group, ...prev];
+        });
       });
 
       socket.on('study-group-updated', (group) => {
@@ -40,9 +45,14 @@ const ClassPage = () => {
         );
       });
 
+      socket.on('study-group-deleted', (groupId) => {
+        setStudyGroups((prev) => prev.filter(g => g._id !== groupId));
+      });
+
       return () => {
         socket.off('new-study-group');
         socket.off('study-group-updated');
+        socket.off('study-group-deleted');
       };
     }
   }, [socket, id]);
@@ -64,11 +74,11 @@ const ClassPage = () => {
     setError('');
 
     try {
-      const response = await api.post('/study-groups', {
+      await api.post('/study-groups', {
         ...newGroup,
         classId: id,
       });
-      setStudyGroups([response.data, ...studyGroups]);
+      // Don't add here - let the socket event handle it to avoid duplicates
       setNewGroup({ name: '', description: '', maxMembers: 10 });
       setShowCreateGroup(false);
     } catch (err) {
@@ -84,6 +94,36 @@ const ClassPage = () => {
       );
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to join study group');
+    }
+  };
+
+  const handleLeaveGroup = async (groupId) => {
+    if (!window.confirm('Are you sure you want to leave this study group?')) {
+      return;
+    }
+
+    try {
+      const response = await api.post(`/study-groups/${groupId}/leave`);
+      // Update the group in the list (socket will also update it, but this ensures immediate update)
+      setStudyGroups((prev) =>
+        prev.map((g) => (g._id === groupId ? response.data.studyGroup : g))
+      );
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to leave study group');
+    }
+  };
+
+  const handleDisbandGroup = async (groupId) => {
+    if (!window.confirm('Are you sure you want to disband this study group? This will remove all members and delete the group permanently.')) {
+      return;
+    }
+
+    try {
+      await api.delete(`/study-groups/${groupId}`);
+      // Group will be removed via socket event
+      setStudyGroups((prev) => prev.filter(g => g._id !== groupId));
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to disband study group');
     }
   };
 
@@ -167,9 +207,26 @@ const ClassPage = () => {
             </div>
           ) : (
             studyGroups.map((group) => {
-              const isMember = group.members?.some(
-                (member) => member._id === user._id
-              );
+              // Check if user is creator - handle both ObjectId and populated objects
+              const creatorId = group.createdBy?._id || group.createdBy;
+              const userId = user?._id || user?.id;
+              
+              // Normalize IDs to strings for comparison (handle null/undefined)
+              const creatorIdStr = creatorId ? (creatorId.toString?.() || String(creatorId)) : '';
+              const userIdStr = userId ? (userId.toString?.() || String(userId)) : '';
+              
+              const isCreator = creatorIdStr && userIdStr && (creatorIdStr === userIdStr);
+              
+              // Check if user is a member - handle both ObjectId and populated objects
+              const isMember = (userIdStr && group.members?.some(
+                (member) => {
+                  if (!member) return false;
+                  const memberId = member._id || member;
+                  const memberIdStr = memberId ? (memberId.toString?.() || String(memberId)) : '';
+                  return memberIdStr === userIdStr;
+                }
+              )) || false;
+              
               const isFull = group.members?.length >= group.maxMembers;
 
               return (
@@ -194,7 +251,39 @@ const ClassPage = () => {
                       ))}
                     </div>
                   </div>
-                  {!isMember && (
+                  {isCreator && (
+                    <div className="group-member-actions">
+                      <button
+                        className="btn-in-group"
+                        disabled
+                      >
+                        In Group (Creator)
+                      </button>
+                      <button
+                        onClick={() => handleDisbandGroup(group._id)}
+                        className="btn-disband-group"
+                      >
+                        Disband Group
+                      </button>
+                    </div>
+                  )}
+                  {!isCreator && isMember && (
+                    <div className="group-member-actions">
+                      <button
+                        className="btn-in-group"
+                        disabled
+                      >
+                        In Group
+                      </button>
+                      <button
+                        onClick={() => handleLeaveGroup(group._id)}
+                        className="btn-leave-group"
+                      >
+                        Leave Group
+                      </button>
+                    </div>
+                  )}
+                  {!isCreator && !isMember && (
                     <button
                       onClick={() => handleJoinGroup(group._id)}
                       disabled={isFull}
@@ -202,9 +291,6 @@ const ClassPage = () => {
                     >
                       {isFull ? 'Group Full' : 'Join Group'}
                     </button>
-                  )}
-                  {isMember && (
-                    <div className="member-badge">You're a member</div>
                   )}
                 </div>
               );

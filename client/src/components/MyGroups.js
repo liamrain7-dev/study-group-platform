@@ -7,9 +7,7 @@ import './MyGroups.css';
 const MyGroups = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('joined'); // 'joined' or 'created'
-  const [joinedGroups, setJoinedGroups] = useState([]);
-  const [createdGroups, setCreatedGroups] = useState([]);
+  const [allGroups, setAllGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingGroup, setEditingGroup] = useState(null);
   const [editForm, setEditForm] = useState({ name: '', description: '', maxMembers: 10 });
@@ -30,8 +28,24 @@ const MyGroups = () => {
         api.get('/study-groups/my-joined'),
         api.get('/study-groups/my-created')
       ]);
-      setJoinedGroups(joinedRes.data);
-      setCreatedGroups(createdRes.data);
+      // Combine both lists, removing duplicates (created groups might appear in both)
+      const allGroupsMap = new Map();
+      
+      // Add created groups first
+      createdRes.data.forEach(group => {
+        allGroupsMap.set(group._id, { ...group, isCreated: true });
+      });
+      
+      // Add joined groups (won't overwrite created ones)
+      joinedRes.data.forEach(group => {
+        if (!allGroupsMap.has(group._id)) {
+          allGroupsMap.set(group._id, { ...group, isCreated: false });
+        }
+      });
+      
+      setAllGroups(Array.from(allGroupsMap.values()).sort((a, b) => 
+        new Date(b.createdAt) - new Date(a.createdAt)
+      ));
     } catch (error) {
       console.error('Error fetching groups:', error);
     } finally {
@@ -61,8 +75,8 @@ const MyGroups = () => {
       const response = await api.put(`/study-groups/${groupId}`, editForm);
       
       // Update local state
-      setCreatedGroups(prev =>
-        prev.map(g => g._id === groupId ? response.data : g)
+      setAllGroups(prev =>
+        prev.map(g => g._id === groupId ? { ...response.data, isCreated: g.isCreated } : g)
       );
       
       setEditingGroup(null);
@@ -79,8 +93,8 @@ const MyGroups = () => {
 
     try {
       await api.post(`/study-groups/${groupId}/leave`);
-      // Remove from joined groups
-      setJoinedGroups(prev => prev.filter(g => g._id !== groupId));
+      // Remove from all groups
+      setAllGroups(prev => prev.filter(g => g._id !== groupId));
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to leave study group');
     }
@@ -93,14 +107,15 @@ const MyGroups = () => {
 
     try {
       await api.delete(`/study-groups/${groupId}`);
-      // Remove from created groups
-      setCreatedGroups(prev => prev.filter(g => g._id !== groupId));
+      // Remove from all groups
+      setAllGroups(prev => prev.filter(g => g._id !== groupId));
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to delete study group');
     }
   };
 
-  const renderGroupCard = (group, isCreated = false) => {
+  const renderGroupCard = (group) => {
+    const isCreated = group.isCreated;
     const isEditing = editingGroup === group._id;
 
     return (
@@ -193,9 +208,12 @@ const MyGroups = () => {
               <span>
                 {group.members?.length || 0} / {group.maxMembers} Members
               </span>
-              {!isCreated && (
-                <span>Created by {group.createdBy?.name}</span>
-              )}
+            {isCreated && (
+              <span className="created-badge">You created this</span>
+            )}
+            {!isCreated && (
+              <span>Created by {group.createdBy?.name}</span>
+            )}
             </div>
 
             <div className="group-members">
@@ -246,47 +264,15 @@ const MyGroups = () => {
         <h1>My Groups</h1>
       </header>
 
-      <div className="tabs">
-        <button
-          className={`tab ${activeTab === 'joined' ? 'active' : ''}`}
-          onClick={() => setActiveTab('joined')}
-        >
-          Groups I Joined ({joinedGroups.length})
-        </button>
-        <button
-          className={`tab ${activeTab === 'created' ? 'active' : ''}`}
-          onClick={() => setActiveTab('created')}
-        >
-          Groups I Created ({createdGroups.length})
-        </button>
-      </div>
-
       <div className="groups-content">
-        {activeTab === 'joined' ? (
-          <div className="groups-section">
-            {joinedGroups.length === 0 ? (
-              <div className="empty-state">
-                <p>You haven't joined any study groups yet.</p>
-                <p>Browse classes to find and join study groups!</p>
-              </div>
-            ) : (
-              <div className="groups-grid">
-                {joinedGroups.map(group => renderGroupCard(group, false))}
-              </div>
-            )}
+        {allGroups.length === 0 ? (
+          <div className="empty-state">
+            <p>You haven't joined or created any study groups yet.</p>
+            <p>Browse classes to find and join study groups, or create your own!</p>
           </div>
         ) : (
-          <div className="groups-section">
-            {createdGroups.length === 0 ? (
-              <div className="empty-state">
-                <p>You haven't created any study groups yet.</p>
-                <p>Create a study group in any class to get started!</p>
-              </div>
-            ) : (
-              <div className="groups-grid">
-                {createdGroups.map(group => renderGroupCard(group, true))}
-              </div>
-            )}
+          <div className="groups-grid">
+            {allGroups.map(group => renderGroupCard(group))}
           </div>
         )}
       </div>
