@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import api from '../services/api';
+import ChatBox from './ChatBox';
 import './ClassPage.css';
 
 const ClassPage = () => {
@@ -14,8 +15,12 @@ const ClassPage = () => {
   const [studyGroups, setStudyGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
-  const [newGroup, setNewGroup] = useState({ name: '', description: '', maxMembers: 10 });
+  const [newGroup, setNewGroup] = useState({ name: '', description: '', maxMembers: 10, isPrivate: false });
   const [error, setError] = useState('');
+  const [hasLeftChat, setHasLeftChat] = useState(false);
+  const [showInviteCodeInput, setShowInviteCodeInput] = useState({});
+  const [inviteCodes, setInviteCodes] = useState({});
+  const [openChatGroupId, setOpenChatGroupId] = useState(null);
 
   useEffect(() => {
     if (!user) {
@@ -62,6 +67,10 @@ const ClassPage = () => {
       const response = await api.get(`/classes/${id}`);
       setClassData(response.data);
       setStudyGroups(response.data.studyGroups || []);
+      
+      // Check if user has left chat
+      const chatResponse = await api.get(`/chat/class/${id}`);
+      setHasLeftChat(chatResponse.data.chat?.hasLeftChat || false);
     } catch (error) {
       console.error('Error fetching class:', error);
     } finally {
@@ -79,7 +88,7 @@ const ClassPage = () => {
         classId: id,
       });
       // Don't add here - let the socket event handle it to avoid duplicates
-      setNewGroup({ name: '', description: '', maxMembers: 10 });
+      setNewGroup({ name: '', description: '', maxMembers: 10, isPrivate: false });
       setShowCreateGroup(false);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to create study group');
@@ -88,12 +97,42 @@ const ClassPage = () => {
 
   const handleJoinGroup = async (groupId) => {
     try {
-      const response = await api.post(`/study-groups/${groupId}/join`);
+      const group = studyGroups.find(g => g._id === groupId);
+      const inviteCode = group?.isPrivate ? inviteCodes[groupId] : undefined;
+      
+      if (group?.isPrivate && !inviteCode) {
+        setShowInviteCodeInput({ ...showInviteCodeInput, [groupId]: true });
+        return;
+      }
+
+      const response = await api.post(`/study-groups/${groupId}/join`, { inviteCode });
       setStudyGroups((prev) =>
         prev.map((g) => (g._id === groupId ? response.data : g))
       );
+      setShowInviteCodeInput({ ...showInviteCodeInput, [groupId]: false });
+      setInviteCodes({ ...inviteCodes, [groupId]: '' });
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to join study group');
+    }
+  };
+
+  const handleLeaveClassChat = async () => {
+    try {
+      await api.post(`/chat/class/${id}/leave`);
+      setHasLeftChat(true);
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to leave chat');
+    }
+  };
+
+  const handleRejoinClassChat = async () => {
+    try {
+      await api.post(`/chat/class/${id}/rejoin`);
+      setHasLeftChat(false);
+      // Refresh messages
+      window.location.reload();
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to rejoin chat');
     }
   };
 
@@ -193,6 +232,16 @@ const ClassPage = () => {
                   required
                 />
               </div>
+              <div className="form-group">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={newGroup.isPrivate}
+                    onChange={(e) => setNewGroup({ ...newGroup, isPrivate: e.target.checked })}
+                  />
+                  Private Group (requires invite code to join)
+                </label>
+              </div>
               <button type="submit" className="btn-primary">
                 Create Study Group
               </button>
@@ -240,7 +289,15 @@ const ClassPage = () => {
                       {group.members?.length || 0} / {group.maxMembers} Members
                     </span>
                     <span>Created by {group.createdBy?.name}</span>
+                    {group.isPrivate && (
+                      <span className="private-badge">🔒 Private</span>
+                    )}
                   </div>
+                  {isCreator && group.isPrivate && group.inviteCode && (
+                    <div className="invite-code-display">
+                      <strong>Invite Code:</strong> <code>{group.inviteCode}</code>
+                    </div>
+                  )}
                   <div className="group-members">
                     <strong>Members:</strong>
                     <div className="members-list">
@@ -284,18 +341,74 @@ const ClassPage = () => {
                     </div>
                   )}
                   {!isCreator && !isMember && (
+                    <div>
+                      {showInviteCodeInput[group._id] ? (
+                        <div className="invite-code-input-group">
+                          <input
+                            type="text"
+                            placeholder="Enter invite code"
+                            value={inviteCodes[group._id] || ''}
+                            onChange={(e) => setInviteCodes({ ...inviteCodes, [group._id]: e.target.value.toUpperCase() })}
+                            className="invite-code-input"
+                            maxLength="6"
+                          />
+                          <button
+                            onClick={() => handleJoinGroup(group._id)}
+                            disabled={isFull || !inviteCodes[group._id]}
+                            className={isFull ? 'btn-disabled' : 'btn-primary'}
+                          >
+                            Join
+                          </button>
+                          <button
+                            onClick={() => {
+                              setShowInviteCodeInput({ ...showInviteCodeInput, [group._id]: false });
+                              setInviteCodes({ ...inviteCodes, [group._id]: '' });
+                            }}
+                            className="btn-secondary"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => handleJoinGroup(group._id)}
+                          disabled={isFull}
+                          className={isFull ? 'btn-disabled' : 'btn-primary'}
+                        >
+                          {isFull ? 'Group Full' : 'Join Group'}
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {isMember && (
                     <button
-                      onClick={() => handleJoinGroup(group._id)}
-                      disabled={isFull}
-                      className={isFull ? 'btn-disabled' : 'btn-primary'}
+                      onClick={() => setOpenChatGroupId(openChatGroupId === group._id ? null : group._id)}
+                      className="btn-chat-toggle"
                     >
-                      {isFull ? 'Group Full' : 'Join Group'}
+                      {openChatGroupId === group._id ? 'Close Chat' : 'Open Chat'}
                     </button>
+                  )}
+                  {isMember && openChatGroupId === group._id && (
+                    <ChatBox
+                      type="studyGroup"
+                      studyGroupId={group._id}
+                    />
                   )}
                 </div>
               );
             })
           )}
+        </div>
+
+        {/* Class Chat */}
+        <div className="class-chat-section">
+          <ChatBox
+            type="class"
+            classId={id}
+            onLeave={handleLeaveClassChat}
+            onRejoin={handleRejoinClassChat}
+            hasLeftChat={hasLeftChat}
+          />
         </div>
       </div>
     </div>

@@ -9,6 +9,7 @@ const authRoutes = require('./routes/auth');
 const universityRoutes = require('./routes/universities');
 const classRoutes = require('./routes/classes');
 const studyGroupRoutes = require('./routes/studyGroups');
+const chatRoutes = require('./routes/chat');
 
 const app = express();
 const server = http.createServer(app);
@@ -45,6 +46,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/universities', universityRoutes);
 app.use('/api/classes', classRoutes);
 app.use('/api/study-groups', studyGroupRoutes);
+app.use('/api/chat', chatRoutes);
 
 // Socket.io for real-time updates
 io.on('connection', (socket) => {
@@ -58,6 +60,11 @@ io.on('connection', (socket) => {
   socket.on('join-class', (classId) => {
     socket.join(`class-${classId}`);
     console.log(`User ${socket.id} joined class ${classId}`);
+  });
+
+  socket.on('join-study-group', (groupId) => {
+    socket.join(`study-group-${groupId}`);
+    console.log(`User ${socket.id} joined study group ${groupId}`);
   });
 
   socket.on('disconnect', () => {
