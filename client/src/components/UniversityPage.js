@@ -28,6 +28,11 @@ const UniversityPage = () => {
       setLoading(false);
     }, 5000);
 
+    // Don't do anything if auth is still loading
+    if (authLoading) {
+      return () => clearTimeout(maxLoadingTimeout);
+    }
+
     if (!user) {
       clearTimeout(maxLoadingTimeout);
       setLoading(false);
@@ -49,7 +54,7 @@ const UniversityPage = () => {
     
     return () => clearTimeout(maxLoadingTimeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     if (socket && user?.university) {
@@ -198,13 +203,13 @@ const UniversityPage = () => {
     }
   };
 
-  // Redirect effect if user or university is missing
+  // Redirect effect if user or university is missing (only after auth is done loading)
   useEffect(() => {
-    if (!loading && (!user || !user.university)) {
+    if (!authLoading && !loading && (!user || !user.university)) {
       console.warn('Redirecting to login - user or university missing', { user, hasUniversity: !!user?.university });
       navigate('/login');
     }
-  }, [loading, user, navigate]);
+  }, [loading, authLoading, user, navigate]);
 
   // Debug: Log render state (must be before early returns)
   useEffect(() => {
