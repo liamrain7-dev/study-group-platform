@@ -171,10 +171,13 @@ const UniversityPage = () => {
     setError('');
 
     try {
+      // Remove any spaces from course name (safety check)
+      const courseNameWithoutSpaces = newClass.code.replace(/\s/g, '');
+      
       // Use course name for both name and code fields
       const classData = {
-        name: newClass.code,
-        code: newClass.code,
+        name: courseNameWithoutSpaces,
+        code: courseNameWithoutSpaces,
         description: newClass.description
       };
       const response = await api.post('/classes', classData);
@@ -319,11 +322,15 @@ const UniversityPage = () => {
                 <input
                   type="text"
                   value={newClass.code}
-                  onChange={(e) => setNewClass({ ...newClass, code: e.target.value })}
+                  onChange={(e) => {
+                    // Remove all spaces from the input
+                    const valueWithoutSpaces = e.target.value.replace(/\s/g, '');
+                    setNewClass({ ...newClass, code: valueWithoutSpaces });
+                  }}
                   required
                   placeholder="e.g., CS135"
                 />
-                <small className="form-hint">The course name or code (e.g., CS135, MATH101, BIO200)</small>
+                <small className="form-hint">The course name or code (e.g., CS135, MATH101, BIO200) - No spaces allowed</small>
               </div>
               <div className="form-group">
                 <label>Description (Optional)</label>
@@ -349,9 +356,9 @@ const UniversityPage = () => {
               <button
                 onClick={() => {
                   setShowCreateClass(true);
-                  // Use search query as course name
+                  // Use search query as course name, removing spaces
                   setNewClass({ 
-                    code: searchQuery, 
+                    code: searchQuery.replace(/\s/g, ''), 
                     description: '' 
                   });
                   setSearchQuery('');
