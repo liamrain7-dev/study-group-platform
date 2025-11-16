@@ -346,7 +346,7 @@ const UniversityPage = () => {
             </div>
           ) : classes.length === 0 ? (
             <div className="empty-state">
-              <p>No classes yet. Create one to get started!</p>
+              <p>Can't find your class? Create one for everyone to see!</p>
             </div>
           ) : (
             classes.map((classItem) => (
