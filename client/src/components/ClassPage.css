@@ -302,25 +302,35 @@
 
 .invite-code-input-group {
   display: flex;
-  gap: 8px;
-  margin-top: 8px;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 10px;
+  width: 100%;
 }
 
 .invite-code-input {
-  flex: 1;
-  padding: 8px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
   font-size: 14px;
   text-transform: uppercase;
   letter-spacing: 2px;
   font-family: monospace;
   text-align: center;
+  box-sizing: border-box;
 }
 
 .invite-code-input:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: #667eea;
+}
+
+.invite-code-input-group .btn-primary,
+.invite-code-input-group .btn-secondary {
+  width: 100%;
+  padding: 10px;
+  margin: 0;
 }
 
 .btn-secondary {
