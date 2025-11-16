@@ -403,7 +403,7 @@ const UniversityPage = () => {
 
         {showCreateClass && (
           <div className="create-class-form">
-            <h3>Create New Class</h3>
+            <h3>Can't find your class? Create one for everyone to see!</h3>
             {error && <div className="error-message">{error}</div>}
             <form onSubmit={handleCreateClass}>
               <div className="form-group">
